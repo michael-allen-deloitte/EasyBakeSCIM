@@ -8,4 +8,3 @@ logging.basicConfig(level=logging.DEBUG, format='"%(asctime)s [%(threadName)-12.
 if __name__ == "__main__":
     logging.info("Server attempting to start")
     socketio.run(application)
-
