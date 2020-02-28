@@ -12,6 +12,8 @@ import warnings
 import configparser
 import sys
 import base64
+import traceback
+import mysql.connector
 
 warnings.filterwarnings("ignore")
 
@@ -25,8 +27,13 @@ authType = config.get('Auth', 'authType')
 headerName = config.get('Auth', 'headerName')
 headerValue = config.get('Auth', 'headerValue')
 
+dbHost = config.get('Database', 'host')
+dbUser = config.get('Database', 'username')
+dbPassword = config.get('Database', 'password')
+dbDatabase = config.get('Database', 'database')
 
-logging.basicConfig(level=logging.DEBUG, format='"%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"', datefmt='%m/%d/%Y %I:%M:%S %p', stream=sys.stdout)
+
+logging.basicConfig(level=logging.DEBUG, format='"%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"', datefmt='%m/%d/%Y %I:%M:%S %p', filename='scim.log')
 
 application = Flask(__name__)
 socketio = SocketIO(application)
@@ -66,54 +73,23 @@ class User():
         self.givenName = ""
         self.email = ""
         self.secondaryEmail = ""
-        # for this object we are assuming only one phone number and that it is always has type 'mobile'
-        self.mobilePhone = ""
-        self.password = ""
-        # there are no custom attributes in this lab but we will leave this here as it does not impact anything else
-        # and keeping it will make it easier to extend with a custom attribute in the future
+        self.userStatus = ""
         self.custom_attributes = {
-            "placeholder": ""
+            "employee_number": ""
         }
         self.update(resource)
-        self.id = self.userName
 
 
     def update(self, resource):
-        logging.debug("Updating user object with values from Okta")
-        keys = dict(resource).keys()
-        customKey = ""
-        for key in keys:
-            if "urn:okta:" in key:
-                customKey = key
-            # example phone number obj: 'phoneNumbers': [{'value': '123-654-4815', 'primary': True, 'type': 'mobile'}]
-            if 'phoneNumbers' in key:
-                for number in resource[key]:
-                    if number['primary']:
-                        self.mobilePhone = number['value']
-        for attribute in ['userName', 'active', 'password']:
-            if attribute in resource:
-                setattr(self, attribute, resource[attribute])
-        for attribute in ['givenName', 'middleName', 'familyName']:
-            if attribute in resource['name']:
-                setattr(self, attribute, resource['name'][attribute])
-        try:
-            for attribute in resource['emails']:
-                if attribute['primary']:
-                    self.email = attribute['value']
-                else:
-                    self.secondaryEmail = attribute['value']
-        except KeyError:
-            pass
-        # get custom attributes
-        try:
-            for attribute in resource[customKey]:
-                self.custom_attributes[attribute] = resource[customKey][attribute]
-        except KeyError:
-            pass
+        self.id = resource[0]
+        self.email = resource[1]
+        self.userName = resource[1]
+        self.givenName = resource[2]
+        self.familyName = resource[3]
+        self.custom_attributes['employee_number'] = resource[4]
 
 
     def to_scim_resource(self):
-        logging.debug("Converting User obj to SCIM resource")
         if self.secondaryEmail == "":
             emails = [
                 {
@@ -136,7 +112,7 @@ class User():
                 }
             ]
         rv = {
-            "schemas": ["urn:scim:schemas:extension:enterprise:1.0", "urn:okta:%s:1.0:user:custom" % appSchema, "urn:scim:schemas:core:1.0"],
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User", "urn:okta:%s:1.0:user:custom" % appSchema, "urn:scim:schemas:core:1.0"],
             "id": self.id,
             "userName": self.userName,
             "name": {
@@ -145,28 +121,72 @@ class User():
                 "middleName": self.middleName,
             },
             "active": self.active,
-            "meta": {
-                "resourceType": "User",
-                "location": url_for('user_get',
-                                    user_id=self.id,
-                                    _external=True)
-                # "created": "2010-01-23T04:56:22Z",
-                # "lastModified": "2011-05-13T04:42:34Z",
-            },
             "emails": emails,
             "urn:okta:%s:1.0:user:custom" % appSchema: self.custom_attributes
         }
-        if self.mobilePhone != "":
-            phone_numbers = [
-                {
-                    "primary": True,
-                    "value": self.mobilePhone,
-                    "type": "mobile"
-                }
-            ]
-            rv['phoneNumbers'] = phone_numbers
         return rv
 
+
+class Database:
+    def __init__(self, host, user, psw, db):
+        self.conn = mysql.connector.connect(
+            host = host,
+            user = user,
+            passwd = psw,
+            database = db
+        )
+
+    def query(self, statement):
+        cursor = self.conn.cursor()
+        cursor.execute(statement)
+        result = cursor.fetchall()
+        cursor.close()
+        return result
+
+
+@application.route("/scim/v2/Users", methods=['GET'])
+def users_get():
+    try:
+        logging.info("Hitting GET endpoint")
+
+        # get headers to validate authentication
+        headers = request.headers
+        if not authenticate(headers, type=authType):
+            logging.error("The credentials supplied to the SCIM service are invalid")
+            return scim_error("The credentials supplied to the SCIM service are invalid", 401)
+
+        # get params for pagination
+        params = request.args.to_dict()
+        logging.info("url parameters received: %s" % str(params))
+        try:
+            startIndex = int(params['startIndex'])
+            count = int(params['count'])
+        except KeyError:
+            startIndex = 1
+            count = 200
+
+        logging.debug('Reading users from the database')
+        database = Database(dbHost, dbUser, dbPassword, dbDatabase)
+        results = database.query('select * from users')
+        logging.debug('Results returned from database: %i' % len(results))
+
+        logging.debug('Converting database list to user objects')
+        users = []
+        for result in results:
+            users.append(User(result))
+
+        return_users = users[startIndex - 1: startIndex - 1 + count]
+
+        logging.debug("Returning list response with parameters - startIndex: %s, count: %s, total_results: %s" % (str(startIndex), str(len(return_users)), str(len(users))))
+        rv = ListResponse(return_users, start_index=startIndex, count=len(return_users), total_results=len(users))
+        resp = flask.jsonify(rv.to_scim_resource())
+
+        return resp, 201
+
+    except Exception as e:
+        logging.error("An unexpected error has occured: %s" % e)
+        logging.error("Stack Trace: %s" % traceback.format_exc())
+        return scim_error("An unexpected error has occured: %s" % e, 500)
 
 @application.route("/scim/v2/ServiceProviderConfigs", methods=['GET'])
 def sp_configs_get():
