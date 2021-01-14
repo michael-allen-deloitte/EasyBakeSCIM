@@ -1,5 +1,6 @@
 import configparser
 import base64
+import flask
 
 config = configparser.ConfigParser()
 config.read('config.ini')
