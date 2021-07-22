@@ -22,7 +22,7 @@ class User():
         self.id = self.userName
         self.appSchema = appSchema
 
-
+    # this function is used to convert the backend object to this User object
     def update(self, resource):
         keys = dict(resource).keys()
         customKey = ""
@@ -56,6 +56,7 @@ class User():
             pass
 
 
+    # this function is used to convert this User object to a SCIM formatted dict to be returned to Okta
     def to_scim_resource(self):
         if self.secondaryEmail == "":
             emails = [
