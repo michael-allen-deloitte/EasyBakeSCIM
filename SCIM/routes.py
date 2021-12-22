@@ -1,14 +1,10 @@
 from SCIM import app
 from SCIM.helpers import authenticate, scim_error
-from SCIM.classes import ListResponse, User, Backend
+from SCIM.classes import ListResponse, SCIMUser, Backend
 import flask
 from flask import request
 import logging
 import traceback
-from SCIM.classes import ListResponse, User
-import flask
-from flask import request
-import logging
 import configparser
 
 logging.basicConfig(level=logging.DEBUG, format='"%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"', datefmt='%Y/%m/%d %I:%M:%S %p', filename='scim.log')
@@ -149,7 +145,7 @@ def users_post():
         except UnicodeEncodeError:
             logging.debug("Could not log POST data due to unicode issue")
 
-        user = User.User(user_resource, appSchema)
+        user = SCIMUser.User(user_resource, appSchema)
         logging.debug('Attempting to create the user')
         backend = Backend.Backend()
         backend.create_user(user)
@@ -188,7 +184,7 @@ def users_put(user_id):
         except UnicodeEncodeError:
             logging.debug("Could not log PUT data due to unicode issue")
 
-        user = User.User(user_resource)
+        user = SCIMUser.User(user_resource)
         backend = Backend.Backend()
 
         if user.password != "":
