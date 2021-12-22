@@ -5,7 +5,7 @@ from flask_restful import Resource
 
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
-from SCIM.classes.implementation.DBBackend import DBBackend as Backend
+from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
 from SCIM.classes.generic.SCIMUser import SCIMUser
 from SCIM.classes.generic.ListResponse import ListResponse
 from SCIM.helpers import scim_error
@@ -55,7 +55,12 @@ class UserSpecificSCIM(Resource):
     # get a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-a-specific-user
     def get(self, user_id: str):
         try:
-            return backend.get_user(user_id).scim_resource
+            scim_user = backend.get_user(user_id)
+            if scim_user is not None:
+                list_resp = ListResponse([scim_user.scim_resource], start_index=1, count=None, total_results=1)
+            else:
+                list_resp = ListResponse([])
+            return flask.jsonify(list_resp.scim_resource)
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
 

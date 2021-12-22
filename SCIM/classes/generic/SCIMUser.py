@@ -1,11 +1,13 @@
 from flask import url_for
 
+from SCIM import APP_SCHEMA
+
 # this class is used to convert scim ojects to a python oject, and vice versa
 # this class is meant to be general and work for all backends, therefore the backend conversion portions will be split from this
 class SCIMUser:
-    def __init__(self, resource, appSchema: str, init_type='scim'):
+    def __init__(self, resource, init_type='scim'):
         self.id = ""
-        self.active = ""
+        self.active: bool
         self.userName = ""
         self.familyName = ""
         self.middleName = ""
@@ -22,9 +24,7 @@ class SCIMUser:
             self.update_from_scim(resource)
         elif init_type == 'backend':
             self.update_from_backend(resource)
-        if self.id == "":
-            self.id = self.userName
-        self.appSchema = appSchema
+        self.appSchema = APP_SCHEMA
 
     # this function is used to convert the SCIM object to this User object
     # examples can be found here: https://developer.okta.com/docs/reference/scim/scim-20/

@@ -57,29 +57,29 @@ class UserBackend:
         # this function should take a filter (possibly, may implement later) and return a list of User objects
         return []
 
-    def create_user(self, user: SCIMUser) -> SCIMUser:
+    def create_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to create a user here
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
-    def update_user(self, user: SCIMUser) -> SCIMUser:
+    def update_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to update user here
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
     # should only be called in PATCH
-    def enable_user(self, user: SCIMUser) -> SCIMUser:
+    def enable_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to enable user here
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
     # should only be called in PATCH
-    def disable_user(self, user: SCIMUser) -> SCIMUser:
+    def disable_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to disable user here
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
-    def reset_password(self, user: SCIMUser) -> SCIMUser:
+    def reset_password(self, scim_user: SCIMUser) -> SCIMUser:
         # code to reset the users password
         # this function should take a User object and return nothing, only error out if there was an issue
         # the user object should contain the password in user.password

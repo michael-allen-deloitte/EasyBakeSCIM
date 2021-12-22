@@ -1,0 +1,25 @@
+[General]
+# must be one of [database]
+# this will be extended for different backend types
+backed_type = database
+
+[Okta]
+# this value is taken from the URL of the app this is connected to in okta
+schema = 
+
+[Database]
+# local determines if the connector will attempt to connect to the database with info from below, or if it will just populate and use a local sqllite db (mostly for testing)
+local = 
+host = 
+username = 
+password = 
+database = 
+# ex: mysql+pymysql
+# see https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls
+dialect_driver_string = 
+
+[Auth]
+authType = 
+# if using basic auth the headerName will be the desired username and the headerValue will be the desired password
+headerName = 
+headerValue = 
