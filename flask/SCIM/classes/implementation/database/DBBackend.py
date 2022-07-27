@@ -35,3 +35,16 @@ class DBBackend(UserBackend):
         db.session.add(db_user)
         db.session.commit()
         return db_user.scim_user
+
+    def update_user(self, scim_user: SCIMUser) -> SCIMUser:
+        user_db_object = UsersDB.query.filter_by(id=scim_user.id).first()
+        user_db_object.firstName = scim_user.givenName
+        user_db_object.lastName = scim_user.familyName
+        user_db_object.email = scim_user.email
+        user_db_object.phone = scim_user.mobilePhone
+        user_db_object.city = scim_user.custom_attributes['city']
+        user_db_object.password = scim_user.password
+        user_db_object.favorite_color = scim_user.custom_attributes['favorite_color']
+        user_db_object.active = scim_user.active
+        db.session.commit()
+        return UsersDB.query.filter_by(id=scim_user.id).first().scim_user

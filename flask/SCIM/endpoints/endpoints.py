@@ -47,7 +47,7 @@ class UsersSCIM(Resource):
         try:
             in_scim_user = SCIMUser(scim_json, appSchema, init_type='scim')
             out_scim_user = backend.create_user(in_scim_user)
-            return out_scim_user.scim_resource
+            return flask.jsonify(out_scim_user.scim_resource), 201
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
 

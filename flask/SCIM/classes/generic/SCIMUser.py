@@ -2,7 +2,7 @@ from flask import url_for
 
 from SCIM import APP_SCHEMA
 
-# this class is used to convert scim ojects to a python oject, and vice versa
+# this class is used to convert scim objects to a python oject, and vice versa
 # this class is meant to be general and work for all backends, therefore the backend conversion portions will be split from this
 class SCIMUser:
     def __init__(self, resource, init_type='scim'):

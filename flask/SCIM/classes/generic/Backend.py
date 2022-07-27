@@ -4,49 +4,6 @@ from SCIM.classes.generic.SCIMUser import SCIMUser
 
 # this is inteded to be used as an interface which is extended for a specific backend
 class UserBackend:
-    """
-    # this is a placeholder until implementation design can be determined
-    def __init__(self, resource, source='scim') -> None:
-        self.id = ""
-        self.active = ""
-        self.userName = ""
-        self.familyName = ""
-        self.middleName = ""
-        self.givenName = ""
-        self.email = ""
-        self.secondaryEmail = ""
-        # for this object we are assuming only one phone number and that it is always has type 'mobile'
-        self.mobilePhone = ""
-        self.password = ""
-        # there are no custom attributes in this lab but we will leave this here as it does not impact anything else
-        # and keeping it will make it easier to extend with a custom attribute in the future
-        self.custom_attributes = {}
-        if source == 'scim':
-            self.update_from_scim(resource)
-        elif source == 'backend':
-            self.update_from_backend(resource)
-        if self.id == "":
-            self.id = self.userName
-
-    def update_from_scim(self, user: SCIMUser) -> None:
-        self.id = user.id
-        self.active = user.active
-        self.userName = user.userName
-        self.familyName = user.familyName
-        self.middleName = user.middleName
-        self.givenName = user.givenName
-        self.email = user.email
-        self.secondaryEmail = user.secondaryEmail
-        self.mobilePhone = user.mobilePhone
-        self.password = user.password
-        self.custom_attributes = user.custom_attributes
-
-    def update_from_backend(self, resource) -> None:
-        
-        return None
-
-    """
-        
     def get_user(self, user_id: str) -> SCIMUser:
         # code to get user object here
         # this function must take a username and return None or a User object
