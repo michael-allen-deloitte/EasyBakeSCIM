@@ -27,10 +27,10 @@ class DBBackend(UserBackend):
 
         db_user = UsersDB(id=id, firstName=scim_user.givenName, lastName=scim_user.familyName, email=scim_user.email, phone=scim_user.mobilePhone, \
             city=scim_user.custom_attributes['city'], password=scim_user.password, favorite_color=scim_user.custom_attributes['favorite_color'], active=scim_user.active)
-        
+
         db.session.add(db_user)
         db.session.commit()
-        logger.debug('User create sucessful')
+        logger.debug('User create sucessful: %s' % str(db_user))
         return db_user.scim_user
 
     def update_user(self, scim_user: SCIMUser) -> SCIMUser:
