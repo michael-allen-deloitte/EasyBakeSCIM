@@ -1,10 +1,10 @@
 from flask import url_for
 
-from SCIM import APP_SCHEMA
+from SCIM import APP_SCHEMA, logger
 
 # this class is used to convert scim objects to a python oject, and vice versa
 # this class is meant to be general and work for all backends, therefore the backend conversion portions will be split from this
-class SCIMUser:
+class SCIMUser(object):
     def __init__(self, resource, init_type='scim'):
         self.id = ""
         self.active: bool
@@ -24,27 +24,33 @@ class SCIMUser:
             self.update_from_scim(resource)
         elif init_type == 'backend':
             self.update_from_backend(resource)
-        self.appSchema = APP_SCHEMA
+        logger.debug('SCIMUser obj initalized from %s' % init_type)
 
     # this function is used to convert the SCIM object to this User object
     # examples can be found here: https://developer.okta.com/docs/reference/scim/scim-20/
     def update_from_scim(self, resource: dict) -> None:
+        logger.debug('input obj: %s' % resource)
         keys = dict(resource).keys()
         customKey = ""
+        logger.debug('Looking for custom keys')
         for key in keys:
             if "urn:okta:" in key:
                 customKey = key
             # example phone number obj: 'phoneNumbers': [{'value': '123-654-4815', 'primary': True, 'type': 'mobile'}]
             if 'phoneNumbers' in key:
+                logger.debug('phone numbers')
                 for number in resource[key]:
-                    if number['primary']:
+                    if number['type'] == 'mobile':
                         self.mobilePhone = number['value']
+        logger.debug('un, active, password')
         for attribute in ['userName', 'active', 'password']:
             if attribute in resource:
                 setattr(self, attribute, resource[attribute])
+        logger.debug('names')
         for attribute in ['givenName', 'middleName', 'familyName']:
             if attribute in resource['name']:
                 setattr(self, attribute, resource['name'][attribute])
+        logger.debug('emails')
         try:
             for attribute in resource['emails']:
                 if attribute['primary']:
@@ -54,6 +60,7 @@ class SCIMUser:
         except KeyError:
             pass
         # get custom attributes
+        logger.debug('custom attributes')
         try:
             for attribute in resource[customKey]:
                 self.custom_attributes[attribute] = resource[customKey][attribute]
@@ -102,7 +109,7 @@ class SCIMUser:
                 }
             ]
         rv = {
-            "schemas": ["urn:scim:schemas:extension:enterprise:1.0", "urn:okta:%s:1.0:user:custom" % self.appSchema, "urn:scim:schemas:core:1.0"],
+            "schemas": ["urn:scim:schemas:extension:enterprise:1.0", "urn:okta:%s:1.0:user:custom" % APP_SCHEMA, "urn:scim:schemas:core:1.0"],
             "id": self.id,
             "userName": self.userName,
             "name": {
@@ -111,16 +118,16 @@ class SCIMUser:
                 "middleName": self.middleName,
             },
             "active": self.active,
-            "meta": {
-                "resourceType": "User",
-                "location": url_for('user_get',
-                                    user_id=self.id,
-                                    _external=True)
+            #"meta": {
+            #    "resourceType": "User",
+            #    "location": url_for('user_get',
+            #                        user_id=self.id,
+            #                        _external=True)
                 # "created": "2010-01-23T04:56:22Z",
                 # "lastModified": "2011-05-13T04:42:34Z",
-            },
+            #},
             "emails": emails,
-            "urn:okta:%s:1.0:user:custom" % self.appSchema: self.custom_attributes
+            "urn:okta:%s:1.0:user:custom" % APP_SCHEMA: self.custom_attributes
         }
         if self.mobilePhone != "":
             phone_numbers = [
@@ -131,4 +138,5 @@ class SCIMUser:
                 }
             ]
             rv['phoneNumbers'] = phone_numbers
+        logger.debug('SCIM resource: %s' % rv)
         return rv

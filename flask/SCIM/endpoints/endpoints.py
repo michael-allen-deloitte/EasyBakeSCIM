@@ -1,6 +1,5 @@
 import logging
-import flask
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from flask_restful import Resource
 
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
@@ -10,7 +9,6 @@ from SCIM.classes.generic.SCIMUser import SCIMUser
 from SCIM.classes.generic.ListResponse import ListResponse
 from SCIM.helpers import scim_error
 
-appSchema = 'test'
 backend = Backend()
 
 class ServiceProviderConfigSCIM(Resource):
@@ -45,9 +43,9 @@ class UsersSCIM(Resource):
             return scim_error('Invalid JSON', 400)
 
         try:
-            in_scim_user = SCIMUser(scim_json, appSchema, init_type='scim')
+            in_scim_user = SCIMUser(scim_json, init_type='scim')
             out_scim_user = backend.create_user(in_scim_user)
-            return flask.jsonify(out_scim_user.scim_resource), 201
+            return make_response(jsonify(out_scim_user.scim_resource), 201)
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
 
@@ -60,7 +58,7 @@ class UserSpecificSCIM(Resource):
                 list_resp = ListResponse([scim_user.scim_resource], start_index=1, count=None, total_results=1)
             else:
                 list_resp = ListResponse([])
-            return flask.jsonify(list_resp.scim_resource)
+            return jsonify(list_resp.scim_resource)
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
 
@@ -74,7 +72,7 @@ class UserSpecificSCIM(Resource):
             return scim_error('Invalid JSON', 400)
 
         try:
-            in_scim_user = SCIMUser(scim_json, appSchema, init_type='scim')
+            in_scim_user = SCIMUser(scim_json, init_type='scim')
             out_scim_user = backend.update_user(in_scim_user)
             return out_scim_user.scim_resource
         except Exception as e:

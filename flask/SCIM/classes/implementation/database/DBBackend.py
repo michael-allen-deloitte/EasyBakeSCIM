@@ -1,16 +1,10 @@
 import logging
 import uuid
 
-from SCIM import db, LOG_FORMAT, LOG_LEVEL
+from SCIM import db, logger
 from SCIM.classes.generic.Backend import UserBackend
 from SCIM.classes.generic.SCIMUser import SCIMUser
 from SCIM.classes.implementation.database.models import UsersDB
-
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
 
 class DBBackend(UserBackend):
     def get_user(self, user_id: str) -> SCIMUser:
@@ -29,11 +23,14 @@ class DBBackend(UserBackend):
         else:
             id = scim_user.id
 
+        logger.debug('Creating user in DB: %s' % vars(scim_user))
+
         db_user = UsersDB(id=id, firstName=scim_user.givenName, lastName=scim_user.familyName, email=scim_user.email, phone=scim_user.mobilePhone, \
             city=scim_user.custom_attributes['city'], password=scim_user.password, favorite_color=scim_user.custom_attributes['favorite_color'], active=scim_user.active)
         
         db.session.add(db_user)
         db.session.commit()
+        logger.debug('User create sucessful')
         return db_user.scim_user
 
     def update_user(self, scim_user: SCIMUser) -> SCIMUser:

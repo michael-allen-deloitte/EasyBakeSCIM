@@ -3,7 +3,7 @@ from SCIM.classes.implementation.database.models import UsersDB
 
 def read_data(in_path):
     out = []
-    with open(in_path, 'r') as input_file:
+    with open(in_path, 'r', errors='surrogateescape') as input_file:
         for line in input_file:
             if line[0] == 'firstName':
                 pass

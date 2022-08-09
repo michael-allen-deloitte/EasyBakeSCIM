@@ -2,7 +2,7 @@ import flask
 from flask_restful import Api
 import logging, configparser, os, sys
 
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
