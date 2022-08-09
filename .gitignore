@@ -1,3 +1,5 @@
 .idea/
 site.db
 config.ini
+example.db
+__pycache__/
