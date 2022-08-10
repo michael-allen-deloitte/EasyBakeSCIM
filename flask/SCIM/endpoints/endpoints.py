@@ -1,4 +1,6 @@
 import logging
+from traceback import format_exc
+import traceback
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 
@@ -38,7 +40,7 @@ class UsersSCIM(Resource):
                 totalResults = len(users)
             return ListResponse(users, startIndex, count, totalResults).scim_resource
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # create user: https://developer.okta.com/docs/reference/scim/scim-20/#create-the-user
     def post(self):
@@ -53,7 +55,7 @@ class UsersSCIM(Resource):
             out_scim_user = backend.create_user(in_scim_user)
             return make_response(jsonify(out_scim_user.scim_resource), 201)
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
 class UserSpecificSCIM(Resource):
     # get a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-a-specific-user
@@ -66,7 +68,7 @@ class UserSpecificSCIM(Resource):
                 list_resp = ListResponse([])
             return list_resp.scim_resource
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # update a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-user-put
     # this is also used for user deactivations in AIN apps
@@ -82,7 +84,7 @@ class UserSpecificSCIM(Resource):
             out_scim_user = backend.update_user(in_scim_user)
             return out_scim_user.scim_resource
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # update a specific user (activate, deactivate, sync password): https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-user-patch
     # note okta says this is currently only supported for OIN applications, so if we create this as an app wizard app all of these updates
@@ -93,7 +95,7 @@ class UserSpecificSCIM(Resource):
         try:
             
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
     """
 
     # Okta's notes on user deletion: https://developer.okta.com/docs/concepts/scim/#delete-deprovision
@@ -104,14 +106,14 @@ class GroupsSCIM(Resource):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # create group: https://developer.okta.com/docs/reference/scim/scim-20/#create-groups
     def post(self):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
 class GroupsSpecificSCIM(Resource):
     # retreive specific group: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-specific-groups
@@ -119,7 +121,7 @@ class GroupsSpecificSCIM(Resource):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # update group name: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-group-name
     # update group membership: https://developer.okta.com/docs/reference/scim/scim-20/#update-specific-group-membership
@@ -128,7 +130,7 @@ class GroupsSpecificSCIM(Resource):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # update group name: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-group-name
     # update group membership: https://developer.okta.com/docs/reference/scim/scim-20/#update-specific-group-membership
@@ -137,11 +139,11 @@ class GroupsSpecificSCIM(Resource):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())
 
     # delete group: https://developer.okta.com/docs/reference/scim/scim-20/#delete-a-specific-group
     def delete(self, group_id: str):
         try:
             pass
         except Exception as e:
-            return scim_error("An unexpected error has occured: %s" % e, 500)
+            return scim_error("An unexpected error has occured: %s" % e, 500, traceback.format_exc())

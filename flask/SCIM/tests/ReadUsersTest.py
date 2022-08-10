@@ -36,6 +36,7 @@ class CreateUserTests(unittest.TestCase):
     def test_get_single_user(self):
         request_url = BASE_URL.strip('/') + '/Users/' + GET_ID
         response = requests.get(request_url)
+        logger.info(response.json())
         self.assertEqual(response.status_code, 200)
         logger.info('Response from Connector: %s' % str(response.json()))
 

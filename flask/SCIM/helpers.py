@@ -21,10 +21,12 @@ def authenticate(headers, type='Header'):
         raise ValueError("The authentication type: %s is not recognized" % type)
 
 
-def scim_error(message, status_code=500):
+def scim_error(message, status_code=500, stack_trace:str = None):
     rv = {
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
         "detail": message,
-        "status": str(status_code)
+        "status": status_code
     }
-    return flask.jsonify(rv), status_code
+    if stack_trace is not None:
+        rv['stack_trace'] = stack_trace
+    return flask.make_response(rv, status_code)
