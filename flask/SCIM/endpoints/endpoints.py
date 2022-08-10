@@ -25,11 +25,17 @@ class UsersSCIM(Resource):
             count = None
             totalResults = 0
             args = request.args
-            if 'startIndex' in args: startIndex = int(args.get('startIndex'))
-            if 'count' in args: count = int(args.get('count'))
-            if 'totalResults' in args: totalResults = int(args.get('totalResults'))
-
             users = backend.list_users()
+            if 'startIndex' in args: startIndex = int(args.get('startIndex'))
+            # need to modify this for pagination, leaving as total for now
+            if 'count' in args: 
+                count = int(args.get('count'))
+            else:
+                count = len(users)
+            if 'totalResults' in args: 
+                totalResults = int(args.get('totalResults'))
+            else:
+                totalResults = len(users)
             return ListResponse(users, startIndex, count, totalResults).scim_resource
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
@@ -53,12 +59,12 @@ class UserSpecificSCIM(Resource):
     # get a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-a-specific-user
     def get(self, user_id: str):
         try:
-            scim_user = backend.get_user(user_id)
+            scim_user: SCIMUser = backend.get_user(user_id)
             if scim_user is not None:
                 list_resp = ListResponse([scim_user.scim_resource], start_index=1, count=None, total_results=1)
             else:
                 list_resp = ListResponse([])
-            return jsonify(list_resp.scim_resource)
+            return list_resp.scim_resource
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
 

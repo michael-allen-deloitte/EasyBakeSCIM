@@ -1,5 +1,7 @@
 import logging
+from re import U
 import uuid
+from typing import List
 
 from SCIM import db, LOG_LEVEL, LOG_FORMAT
 from SCIM.classes.generic.Backend import UserBackend
@@ -14,7 +16,7 @@ logger.addHandler(stream_handler)
 
 class DBBackend(UserBackend):
     def get_user(self, user_id: str) -> SCIMUser:
-        user_db_object = UsersDB.query.filter_by(id=user_id).all()
+        user_db_object: List[UsersDB] = UsersDB.query.filter_by(id=user_id).all()
         if len(user_db_object) > 1:
             logger.error('More than 1 object was found with the id:%s' % user_id)
             raise(LookupError, 'More than 1 object was found with the id:%s' % user_id)
@@ -22,6 +24,14 @@ class DBBackend(UserBackend):
             return None
         else:
             return user_db_object[0].scim_user
+
+    def list_users(self, filter=None) -> List[SCIMUser]:
+        out: List[SCIMUser] = []
+        if filter is None:
+            user_db_objs: List[UsersDB] = UsersDB.query.all()
+        for user in user_db_objs:
+            out.append(user.scim_user)
+        return out
     
     def create_user(self, scim_user: SCIMUser) -> SCIMUser:
         if scim_user.id == '':

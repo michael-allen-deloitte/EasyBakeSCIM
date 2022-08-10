@@ -5,7 +5,7 @@ def read_data(in_path):
     out = []
     with open(in_path, 'r', errors='surrogateescape') as input_file:
         for line in input_file:
-            if line[0] == 'firstName':
+            if 'firstName' in line:
                 pass
             else:
                 firstName, lastName, email, phone, guid, city, password, favorite_color, active = line.split(',')

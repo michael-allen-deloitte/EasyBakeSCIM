@@ -36,6 +36,7 @@ class UserBackend:
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
+    # this should only be used if the password can't be updated with the user profile at the same time (if the password is stored somewhere else)
     def reset_password(self, scim_user: SCIMUser) -> SCIMUser:
         # code to reset the users password
         # this function should take a User object and return nothing, only error out if there was an issue
