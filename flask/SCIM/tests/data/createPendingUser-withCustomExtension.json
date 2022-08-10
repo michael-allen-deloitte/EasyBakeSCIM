@@ -1,0 +1,32 @@
+{
+    "schemas": ["urn:scim:schemas:core:1.0", "urn:okta:onprem_app:1.0:user:custom"],
+    "userName": "myemail-pendingcustom@domain.com",
+    "emails": [
+        {
+            "primary": true,
+            "value": "myemail-pendingcustom@domain.com",
+            "type": "primary"
+        },
+        {
+            "primary": false,
+            "value": "mypersonalemail-pendingcustom@domain.com",
+            "type": "secondary"
+        }
+    ],
+    "phoneNumbers": [
+        {
+            "value": "123-444-5555",
+            "type": "mobile"
+        }
+    ],
+    "name": {
+        "familyName": "LastName-pendingcustom",
+        "givenName": "FirstName-pendingcustom"
+    },
+    "active": false,
+    "password": "verySecure",
+    "urn:okta:onprem_app:1.0:user:custom": {
+        "city": "Austin",
+        "favorite_color": "#d1b04d"
+    }
+}

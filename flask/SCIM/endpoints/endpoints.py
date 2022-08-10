@@ -82,11 +82,13 @@ class UserSpecificSCIM(Resource):
     # note okta says this is currently only supported for OIN applications, so if we create this as an app wizard app all of these updates
     # will happen in the PUT operation
     # this is also used for user deactivation in OIN apps
+    """
     def patch(self, user_id: str):
         try:
-            pass
+            
         except Exception as e:
             return scim_error("An unexpected error has occured: %s" % e, 500)
+    """
 
     # Okta's notes on user deletion: https://developer.okta.com/docs/concepts/scim/#delete-deprovision
 

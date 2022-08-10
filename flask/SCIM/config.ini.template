@@ -9,7 +9,8 @@ schema =
 
 [Database]
 # local determines if the connector will attempt to connect to the database with info from below, or if it will just populate and use a local sqllite db (mostly for testing)
-local = 
+local =
+# if local = true then the rest of the values in this section are ignored 
 host = 
 username = 
 password = 

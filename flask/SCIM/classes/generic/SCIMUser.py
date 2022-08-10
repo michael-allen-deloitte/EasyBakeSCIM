@@ -1,6 +1,12 @@
-from flask import url_for
+import logging
 
-from SCIM import APP_SCHEMA, logger
+from SCIM import APP_SCHEMA, LOG_LEVEL, LOG_FORMAT
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOG_LEVEL)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(LOG_FORMAT)
+logger.addHandler(stream_handler)
 
 # this class is used to convert scim objects to a python oject, and vice versa
 # this class is meant to be general and work for all backends, therefore the backend conversion portions will be split from this
@@ -32,25 +38,20 @@ class SCIMUser(object):
         logger.debug('input obj: %s' % resource)
         keys = dict(resource).keys()
         customKey = ""
-        logger.debug('Looking for custom keys')
         for key in keys:
             if "urn:okta:" in key:
                 customKey = key
             # example phone number obj: 'phoneNumbers': [{'value': '123-654-4815', 'primary': True, 'type': 'mobile'}]
             if 'phoneNumbers' in key:
-                logger.debug('phone numbers')
                 for number in resource[key]:
                     if number['type'] == 'mobile':
                         self.mobilePhone = number['value']
-        logger.debug('un, active, password')
-        for attribute in ['userName', 'active', 'password']:
+        for attribute in ['userName', 'active', 'password', 'id']:
             if attribute in resource:
                 setattr(self, attribute, resource[attribute])
-        logger.debug('names')
         for attribute in ['givenName', 'middleName', 'familyName']:
             if attribute in resource['name']:
                 setattr(self, attribute, resource['name'][attribute])
-        logger.debug('emails')
         try:
             for attribute in resource['emails']:
                 if attribute['primary']:
@@ -60,7 +61,6 @@ class SCIMUser(object):
         except KeyError:
             pass
         # get custom attributes
-        logger.debug('custom attributes')
         try:
             for attribute in resource[customKey]:
                 self.custom_attributes[attribute] = resource[customKey][attribute]
@@ -69,6 +69,7 @@ class SCIMUser(object):
 
     # this function is used by the backend to populate this object, it takes in a generic dict with all the attributes
     def update_from_backend(self, resource: dict) -> None:
+        logger.debug('input obj: %s' % resource)
         keys = dict(resource).keys()
         if 'id' in keys: self.id = resource['id']
         if 'active' in keys: self.active = resource['active']

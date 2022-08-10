@@ -3,3 +3,4 @@ site.db
 config.ini
 example.db
 __pycache__/
+.vscode

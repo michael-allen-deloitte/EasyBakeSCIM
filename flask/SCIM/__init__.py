@@ -37,7 +37,7 @@ if BACKEND_TYPE == 'database':
     db = SQLAlchemy(app)
 
 from SCIM.endpoints import endpoints
-api.add_resource(endpoints.UsersSCIM, '/scim/v2/Users')
-api.add_resource(endpoints.UserSpecificSCIM, '/scim/v2/Users/<user_id>')
-api.add_resource(endpoints.GroupsSCIM, '/scim/v2/Groups')
-api.add_resource(endpoints.GroupsSpecificSCIM, '/scim/v2/Groups/<group_id>')
+api.add_resource(endpoints.UsersSCIM, '/Users')
+api.add_resource(endpoints.UserSpecificSCIM, '/Users/<user_id>')
+#api.add_resource(endpoints.GroupsSCIM, '/Groups')
+#api.add_resource(endpoints.GroupsSpecificSCIM, '/Groups/<group_id>')
