@@ -35,6 +35,7 @@ class ServiceProviderConfigSCIM(Resource):
         except Exception as e:
             return handle_server_side_error(e)
 
+
 class UsersSCIM(Resource):
     # retrieve users: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-users
     def get(self) -> dict:
@@ -48,6 +49,7 @@ class UsersSCIM(Resource):
             # check if first page, if so, call DB and set cache
             if startIndex == 1:
                 users = backend.list_users()
+                # write cache here
             # else just get the users from the cache
             # NEED TO FIGURE OUT CACHE PART
             else:

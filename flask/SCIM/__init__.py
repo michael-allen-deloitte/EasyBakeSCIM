@@ -20,6 +20,7 @@ else:
     sys.exit(1)
 
 BACKEND_TYPE = config['General']['backend_type']
+# init this to False, read from config if the backend is a DB
 LOCAL_DATABASE = False
 APP_SCHEMA = config['Okta']['schema']
 

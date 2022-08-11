@@ -14,6 +14,7 @@ class UsersDB(db.Model):
     password = db.Column(db.String(30), nullable=False)
     favorite_color = db.Column(db.String(10), nullable=True)
     active = db.Column(db.Boolean, nullable=False)
+    number = db.Column(db.Interger, nullable=True)
 
     @property
     def scim_user(self) -> SCIMUser:
@@ -28,7 +29,8 @@ class UsersDB(db.Model):
             'password': self.password,
             'custom_attributes': {
                 'city': self.city,
-                'favorite_color': self.favorite_color
+                'favorite_color': self.favorite_color,
+                'number': self.number
             }
         }
         return SCIMUser(scim_user_create_dict, init_type='backend')

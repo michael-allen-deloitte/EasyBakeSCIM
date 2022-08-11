@@ -53,6 +53,10 @@ class DBBackend(UserBackend):
             db_user.favorite_color = scim_user.custom_attributes['favorite_color']
         except KeyError:
             pass
+        try:
+            db_user.number = scim_user.custom_attributes['number']
+        except KeyError:
+            pass
 
         db.session.add(db_user)
         db.session.commit()
@@ -78,6 +82,10 @@ class DBBackend(UserBackend):
             user_db_object.favorite_color = scim_user.custom_attributes['favorite_color']
         except KeyError:
             user_db_object.favorite_color = None
+        try:
+            user_db_object.number = scim_user.custom_attributes['number']
+        except KeyError:
+            user_db_object.number = None
         user_db_object.active = scim_user.active
         db.session.commit()
         return UsersDB.query.filter_by(id=scim_user.id).first().scim_user

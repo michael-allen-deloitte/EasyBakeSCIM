@@ -25,7 +25,7 @@ else:
 BASE_URL = config['Local Deployment']['base_url']
 GET_ID = config['Local Deployment']['get_id']
 
-class CreateUserTests(unittest.TestCase):
+class ReadUsersTests(unittest.TestCase):
     def test_list_all_users(self):
         request_url = BASE_URL.strip('/') + '/Users'
         response = requests.get(request_url)
