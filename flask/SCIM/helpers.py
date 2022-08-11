@@ -29,4 +29,22 @@ def scim_error(message, status_code=500, stack_trace:str = None):
     }
     if stack_trace is not None:
         rv['stack_trace'] = stack_trace
-    return flask.make_response(rv, status_code)
+    return rv
+
+def create_spconfig_json() -> dict:
+    spconfig_json = {
+        'schemas': ['urn:scim:schemas:core:1.0', 'urn:okta:schemas:scim:providerconfig:1.0'],
+        'patch': {'supported': False},
+        'bulk': {'supported': False},
+        'sort': {'supported': False},
+        'etag': {'supported': False},
+        'filter': {'supported': True, 'maxResults': 200},
+        'authenticationSchemes': []
+    }
+    possible_provisioning_features = config['SCIM Features'].keys()
+    supported_provisioning_features = []
+    for feature in possible_provisioning_features:
+        if config['SCIM Features'][feature].lower() == 'true': supported_provisioning_features.append(feature.upper())
+    spconfig_json['changePassword'] = {'supported': 'PUSH_PASSWORD_UPDATES' in supported_provisioning_features}
+    spconfig_json['urn:okta:schemas:scim:providerconfig:1.0'] = {'userManagementCapabilities': supported_provisioning_features}
+    return spconfig_json

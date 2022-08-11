@@ -24,3 +24,15 @@ authType =
 # if using basic auth the headerName will be the desired username and the headerValue will be the desired password
 headerName = 
 headerValue = 
+
+[SCIM Features]
+PUSH_NEW_USER = 
+PUSH_PASSWORD_UPDATES = 
+PUSH_PENDING_USERS = 
+PUSH_PROFILE_UPDATES = 
+PUSH_USER_DEACTIVATION = 
+REACTIVATE_USERS = 
+IMPORT_NEW_USERS = 
+OPP_SCIM_INCREMENTAL_IMPORTS = 
+IMPORT_PROFILE_UPDATES = 
+GROUP_PUSH = 
