@@ -1,7 +1,7 @@
 [General]
 # must be one of [database]
 # this will be extended for different backend types
-backed_type = database
+backend_type = database
 
 [Okta]
 # this value is taken from the URL of the app this is connected to in okta
