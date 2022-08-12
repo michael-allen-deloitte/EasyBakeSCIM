@@ -1,13 +1,6 @@
-import logging
 from typing import List
 
-from SCIM import APP_SCHEMA, LOG_LEVEL, LOG_FORMAT
-
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+from SCIM import APP_SCHEMA
 
 # this class is used to convert scim objects to a python oject, and vice versa
 # this class is meant to be general and work for all backends, therefore the backend conversion portions will be split from this
@@ -31,12 +24,10 @@ class SCIMUser(object):
             self.update_from_scim(resource)
         elif init_type == 'backend':
             self.update_from_backend(resource)
-        logger.debug('SCIMUser obj initalized from %s' % init_type)
 
     # this function is used to convert the SCIM object to this User object
     # examples can be found here: https://developer.okta.com/docs/reference/scim/scim-20/
     def update_from_scim(self, resource: dict) -> None:
-        logger.debug('input obj: %s' % resource)
         keys = dict(resource).keys()
         customKey = ""
         for key in keys:
@@ -70,7 +61,6 @@ class SCIMUser(object):
 
     # this function is used by the backend to populate this object, it takes in a generic dict with all the attributes
     def update_from_backend(self, resource: dict) -> None:
-        logger.debug('input obj: %s' % resource)
         keys = dict(resource).keys()
         if 'id' in keys: self.id = resource['id']
         if 'active' in keys: self.active = resource['active']
@@ -140,7 +130,6 @@ class SCIMUser(object):
                 }
             ]
             rv['phoneNumbers'] = phone_numbers
-        logger.debug('SCIM resource: %s' % rv)
         return rv
 
 def obj_list_to_scim_json_list(scim_user_obj_list: List[SCIMUser]) -> List[dict]:

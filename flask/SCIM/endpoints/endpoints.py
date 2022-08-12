@@ -8,7 +8,8 @@ from flask_restful import Resource
 from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
 from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
-from SCIM.helpers import scim_error, create_spconfig_json, Cache
+from SCIM.classes.generic.Cache import Cache
+from SCIM.helpers import scim_error, create_spconfig_json
 
 LOG_LEVEL = logging.DEBUG
 LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
@@ -29,10 +30,13 @@ def handle_server_side_error(e: Exception):
     logger.error(error_json)
     return error_response
 
+
 class ServiceProviderConfigSCIM(Resource):
     def get(self):
         try:
-            return jsonify(SPCONFIG_JSON)
+            response = jsonify(SPCONFIG_JSON)
+            logger.debug('Response: %s' % response)
+            return response
         except Exception as e:
             return handle_server_side_error(e)
 
@@ -59,7 +63,7 @@ class UsersSCIM(Resource):
                 try:
                     users = list_users_cache.read_json_cache()
                 except TimeoutError:
-                    logger.info('No cache found, pulling from DB and saving new cache')
+                    logger.info('Pulling from DB and saving new cache')
                     users = users = backend.list_users()
                     list_users_cache.write_json_cache(obj_list_to_scim_json_list(users))
 
@@ -75,7 +79,9 @@ class UsersSCIM(Resource):
             if totalResults < count:
                 count = totalResults
 
-            return ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource
+            response = ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource
+            logger.debug('Response: %s' % response)
+            return response
         except Exception as e:
             return handle_server_side_error(e)
 
@@ -89,10 +95,14 @@ class UsersSCIM(Resource):
 
         try:
             in_scim_user = SCIMUser(scim_json, init_type='scim')
+            logger.debug('Input: %s' % in_scim_user.scim_resource)
             out_scim_user = backend.create_user(in_scim_user)
-            return make_response(jsonify(out_scim_user.scim_resource), 201)
+            response = jsonify(out_scim_user.scim_resource)
+            logger.debug('Response: %s' % response)
+            return make_response(response, 201)
         except Exception as e:
             return handle_server_side_error(e)
+
 
 class UserSpecificSCIM(Resource):
     # get a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-a-specific-user
@@ -103,7 +113,9 @@ class UserSpecificSCIM(Resource):
                 list_resp = ListResponse([scim_user], start_index=1, count=None, total_results=1)
             else:
                 list_resp = ListResponse([])
-            return list_resp.scim_resource
+            response = list_resp.scim_resource
+            logger.debug('Response: %s' % response)
+            return response
         except Exception as e:
             return handle_server_side_error(e)
 
@@ -118,8 +130,11 @@ class UserSpecificSCIM(Resource):
 
         try:
             in_scim_user = SCIMUser(scim_json, init_type='scim')
+            logger.debug('Input: %s' % in_scim_user.scim_resource)
             out_scim_user = backend.update_user(in_scim_user)
-            return out_scim_user.scim_resource
+            response = jsonify(out_scim_user.scim_resource)
+            logger.debug('Response: %s' % response)
+            return response
         except Exception as e:
             return handle_server_side_error(e)
 
@@ -137,6 +152,7 @@ class UserSpecificSCIM(Resource):
 
     # Okta's notes on user deletion: https://developer.okta.com/docs/concepts/scim/#delete-deprovision
 
+
 class GroupsSCIM(Resource):
     # retreive groups: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-groups
     def get(self) -> dict:
@@ -151,6 +167,7 @@ class GroupsSCIM(Resource):
             pass
         except Exception as e:
             return handle_server_side_error(e)
+
 
 class GroupsSpecificSCIM(Resource):
     # retreive specific group: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-specific-groups

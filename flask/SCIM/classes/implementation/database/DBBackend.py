@@ -1,5 +1,4 @@
 import logging
-from re import U
 import uuid
 from typing import List
 

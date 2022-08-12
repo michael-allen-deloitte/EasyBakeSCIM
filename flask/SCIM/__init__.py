@@ -25,6 +25,7 @@ LOCAL_DATABASE = False
 APP_SCHEMA = config['Okta']['schema']
 
 app = flask.Flask(__name__)
+app.logger.handlers.clear()
 api = Api(app)
 
 if BACKEND_TYPE == 'database':
