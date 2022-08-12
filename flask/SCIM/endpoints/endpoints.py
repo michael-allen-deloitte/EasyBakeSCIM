@@ -6,9 +6,9 @@ from flask_restful import Resource
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
 from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
-from SCIM.classes.generic.SCIMUser import SCIMUser
+from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
-from SCIM.helpers import scim_error, create_spconfig_json
+from SCIM.helpers import scim_error, create_spconfig_json, Cache
 
 LOG_LEVEL = logging.DEBUG
 LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
@@ -19,6 +19,7 @@ stream_handler.setFormatter(LOG_FORMAT)
 logger.addHandler(stream_handler)
 
 backend = Backend()
+list_users_cache = Cache('list_users.json')
 
 SPCONFIG_JSON = create_spconfig_json()
 
@@ -46,22 +47,34 @@ class UsersSCIM(Resource):
                 startIndex = int(args.get('startIndex'))
             else:
                 startIndex = 1
+            first_page: bool = startIndex == 1
             # check if first page, if so, call DB and set cache
-            if startIndex == 1:
+            if first_page:
+                logger.info('First page, reading users from database')
                 users = backend.list_users()
-                # write cache here
+                list_users_cache.write_json_cache(obj_list_to_scim_json_list(users))
             # else just get the users from the cache
-            # NEED TO FIGURE OUT CACHE PART
             else:
-                users = backend.list_users()
-            if 'count' in args: 
-                count = int(args.get('count'))
-            else:
-                count = len(users)
+                logger.info('Not the first page, reading users from cache')
+                try:
+                    users = list_users_cache.read_json_cache()
+                except TimeoutError:
+                    logger.info('No cache found, pulling from DB and saving new cache')
+                    users = users = backend.list_users()
+                    list_users_cache.write_json_cache(obj_list_to_scim_json_list(users))
+
             if 'totalResults' in args: 
                 totalResults = int(args.get('totalResults'))
             else:
                 totalResults = len(users)
+
+            if 'count' in args: 
+                count = int(args.get('count'))
+            else:
+                count = SPCONFIG_JSON['filter']['maxResults']
+            if totalResults < count:
+                count = totalResults
+
             return ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource
         except Exception as e:
             return handle_server_side_error(e)

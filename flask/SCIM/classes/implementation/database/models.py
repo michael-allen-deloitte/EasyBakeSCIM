@@ -14,7 +14,7 @@ class UsersDB(db.Model):
     password = db.Column(db.String(30), nullable=False)
     favorite_color = db.Column(db.String(10), nullable=True)
     active = db.Column(db.Boolean, nullable=False)
-    number = db.Column(db.Interger, nullable=True)
+    number = db.Column(db.Integer, nullable=True)
 
     @property
     def scim_user(self) -> SCIMUser:

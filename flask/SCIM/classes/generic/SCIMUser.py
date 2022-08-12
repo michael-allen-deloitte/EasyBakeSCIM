@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from SCIM import APP_SCHEMA, LOG_LEVEL, LOG_FORMAT
 
@@ -141,3 +142,9 @@ class SCIMUser(object):
             rv['phoneNumbers'] = phone_numbers
         logger.debug('SCIM resource: %s' % rv)
         return rv
+
+def obj_list_to_scim_json_list(scim_user_obj_list: List[SCIMUser]) -> List[dict]:
+    out = []
+    for obj in scim_user_obj_list:
+        out.append(obj.scim_resource)
+    return out

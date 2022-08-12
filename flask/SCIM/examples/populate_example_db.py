@@ -8,9 +8,9 @@ def read_data(in_path):
             if 'firstName' in line:
                 pass
             else:
-                firstName, lastName, email, phone, guid, city, password, favorite_color, active = line.split(',')
+                firstName, lastName, email, phone, guid, city, password, favorite_color, active, number = line.split(',')
                 db_obj = UsersDB(id=guid, firstName=firstName, lastName=lastName, email=email, phone=phone, city=city, password=password, \
-                    favorite_color=favorite_color, active=active == 'true')
+                    favorite_color=favorite_color, active=active == 'true', number=number)
                 out.append(db_obj)
     return out
 

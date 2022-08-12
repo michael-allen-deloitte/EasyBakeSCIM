@@ -1,12 +1,74 @@
 import base64
-import flask
+from linecache import cache
+import os
+import json
+import platform
+import time
+from typing import Union, List
 
 from SCIM import config
 
 headerName = config['Auth']['headerName']
-headerValue = config.get('Auth', 'headerValue')
+headerValue = config['Auth']['headerValue']
 
-def authenticate(headers, type='Header'):
+def creation_time(path_to_file) -> float:
+    """
+    Try to get the date that a file was created, falling back to when it was
+    last modified if that isn't possible.
+    See http://stackoverflow.com/a/39501288/1709587 for explanation.
+    """
+    if platform.system() == 'Windows':
+        return os.path.getctime(path_to_file)
+    else:
+        stat = os.stat(path_to_file)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
+
+class Cache:
+    cache_base_dir = config['Cache']['dir']
+    cache_lifetime_sec = int(config['Cache']['lifetime'])*60
+
+    def __init__(self, file_name: str) -> None:
+        if not os.path.exists(self.cache_base_dir):
+            os.mkdir(self.cache_base_dir)
+        self.cache_file_path = self.cache_base_dir.strip('/').strip('\\') + '/' + file_name
+        # if there already exists a cache file on startup delete it
+        if os.path.isfile(self.cache_file_path):
+            os.remove(self.cache_file_path)
+
+    def check_cache_lifetime_valid(self) -> bool:
+        cache_created = creation_time(self.cache_file_path)
+        return time.time() > cache_created + self.cache_lifetime_sec
+
+    def write_json_cache(self, json_obj: dict) -> None:
+        # if the cache already exists
+        if os.path.isfile(self.cache_file_path):
+            # if its no longer valid overwrite it
+            # if it is valid do nothing
+            if self.check_cache_lifetime_valid():
+                os.remove(self.cache_file_path)
+                cache_file = open(self.cache_file_path, 'w')
+                json.dump(json_obj, cache_file)
+                cache_file.close()
+        # if not write it
+        else:
+            with open(self.cache_file_path, 'w') as cache_file:
+                json.dump(json_obj, cache_file)
+        
+    
+    def read_json_cache(self) -> Union[List[dict], dict]:
+        if self.check_cache_lifetime_valid():
+            with open(self.cache_file_path, 'r') as cache_file:
+                return json.load(cache_file)
+        else:
+            raise TimeoutError('The cache has timed out')
+
+
+def authenticate(headers, type='Header') -> bool:
     if type.lower() == 'header':
         try:
             return headers[headerName] == headerValue
@@ -21,7 +83,7 @@ def authenticate(headers, type='Header'):
         raise ValueError("The authentication type: %s is not recognized" % type)
 
 
-def scim_error(message, status_code=500, stack_trace:str = None):
+def scim_error(message, status_code=500, stack_trace:str = None) -> dict:
     rv = {
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
         "detail": message,
