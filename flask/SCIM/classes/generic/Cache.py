@@ -50,26 +50,63 @@ class Cache:
     def write_json_cache(self, json_obj: dict) -> None:
         # if the cache already exists
         if os.path.isfile(self.cache_file_path):
-            # if its no longer valid overwrite it
-            # if it is valid do nothing
-            if not self.check_cache_lifetime_valid():
-                logger.debug('Cache no longer valid, replacing it')
+            # if there is no cache lock overwrite it
+            # if there is a lock file do nothing
+            if not self.check_for_lock_file():
+                logger.info('Cache no longer valid and no lock in place, refreshing cache')
                 os.remove(self.cache_file_path)
                 cache_file = open(self.cache_file_path, 'w')
                 json.dump(json_obj, cache_file)
                 cache_file.close()
         # if not write it
         else:
-            logger.debug('No cache found, writing data to cache')
+            logger.info('No cache found, writing data to cache')
             with open(self.cache_file_path, 'w') as cache_file:
                 json.dump(json_obj, cache_file)
         
-    
     def read_json_cache(self) -> Union[List[dict], dict]:
         if self.check_cache_lifetime_valid():
-            logger.debug('Reading data from cache')
+            logger.info('Reading data from cache')
+            with open(self.cache_file_path, 'r') as cache_file:
+                return json.load(cache_file)
+        elif not self.check_cache_lifetime_valid() and self.check_for_lock_file():
+            logger.info('Cache has timed out but is currently locked, reading from expired cache')
             with open(self.cache_file_path, 'r') as cache_file:
                 return json.load(cache_file)
         else:
-            logger.debug('Cache has timed out')
+            logger.info('Cache has timed out and no lock file exists')
             raise TimeoutError('The cache has timed out')
+
+    # create a lock file and add a 'start' to the beginning to notate a pagination process is using it
+    def create_lock_file(self, identifier_string: str = '') -> None:
+        lock_file = open(self.cache_file_path + '.lock', 'w')
+        lock_file.write('start\t' + identifier_string)
+        lock_file.close()
+
+    # if a second pagination process needs access to the cache so data is not overwritten
+    # append a 'start' to the lock file to notate another pagination process is using it
+    # when a pagination loop is completed, append 'end' to the lock file
+    # lock files can only be removed when the number of 'starts' equals the number of 'ends'
+    # this way the cache will not be modified in the middle of a pagination process
+    def append_lock_file(self, text: str) -> None:
+        lock_file = open(self.cache_file_path + '.lock', 'a')
+        lock_file.write('\n' + text)
+        lock_file.close()
+
+    # lock files can only be removed when the number of 'starts' equals the number of 'ends'
+    # this way the cache will not be modified in the middle of a pagination process
+    def cleanup_lock_file(self, force = False) -> None:
+        if force:
+            logger.info('Force deleting lock file')
+            if os.path.exists(self.cache_file_path + '.lock'): os.remove(self.cache_file_path + '.lock')
+        else:
+            with open(self.cache_file_path + '.lock', 'r') as lock_file:
+                file_contents = lock_file.read()
+            if file_contents.count('start') == file_contents.count('end'):
+                logger.info('All threads finished with lock file, deleting it')
+                os.remove(self.cache_file_path + '.lock')
+            else:
+                logger.info('There is a thread still using the cache lock, once that thread is completed the lock will be removed')
+
+    def check_for_lock_file(self) -> bool:
+        return os.path.isfile(self.cache_file_path + '.lock')

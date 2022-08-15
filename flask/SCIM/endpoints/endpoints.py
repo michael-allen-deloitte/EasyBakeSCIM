@@ -20,7 +20,8 @@ stream_handler.setFormatter(LOG_FORMAT)
 logger.addHandler(stream_handler)
 
 backend = Backend()
-list_users_cache = Cache('list_users.json')
+full_import_cache = Cache('full_import_cache.json')
+incremental_import_cache = Cache('incremental_import_cache.json')
 
 SPCONFIG_JSON = create_spconfig_json()
 
@@ -47,25 +48,48 @@ class UsersSCIM(Resource):
         try:
             # get url parameters
             args = request.args
+
+            if 'filter' in args:
+                filter_string = args['filter']
+                if 'meta.lastModified' in filter_string:
+                    import_type = 'incremental'
+                else:
+                    import_type = 'other'
+            else:
+                filter_string = None
+                import_type = 'full'
+
             if 'startIndex' in args: 
                 startIndex = int(args.get('startIndex'))
             else:
                 startIndex = 1
+
             first_page: bool = startIndex == 1
-            # check if first page, if so, call DB and set cache
-            if first_page:
-                logger.info('First page, reading users from database')
-                users = backend.list_users()
-                list_users_cache.write_json_cache(obj_list_to_scim_json_list(users))
+            # if not doing an import (ex: getting user before create/update) dont bother
+            # with the cache
+            if import_type == 'other':
+                logger.info('Non-import, calling DB')
+                users = backend.list_users(filter=filter_string)
+            # check if first page and no existing cache lock, if so, call DB
+            elif first_page and ((import_type == 'full' and not full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and not incremental_import_cache.check_for_lock_file())):
+                logger.info('First page and no cache lock, reading users from database')
+                users = backend.list_users(filter=filter_string)
             # else just get the users from the cache
             else:
-                logger.info('Not the first page, reading users from cache')
+                logger.info('Not the first page or the cache is locked, reading users from cache')
+                # if its the first page but a lock file exists, append to it so it doesnt get removed
+                # by another pagination process
+                if first_page and ((import_type == 'full' and full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and incremental_import_cache.check_for_lock_file())):
+                    if import_type == 'full': full_import_cache.append_lock_file('start')
+                    elif import_type == 'incremental': incremental_import_cache.append_lock_file('start')
                 try:
-                    users = list_users_cache.read_json_cache()
+                    if import_type == 'full':  users = full_import_cache.read_json_cache()
+                    elif import_type == 'incremental': incremental_import_cache.read_json_cache()
                 except TimeoutError:
                     logger.info('Pulling from DB and saving new cache')
-                    users = users = backend.list_users()
-                    list_users_cache.write_json_cache(obj_list_to_scim_json_list(users))
+                    users = backend.list_users(filter=filter_string)
+                    if import_type == 'full': full_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
+                    elif import_type == 'incremental': incremental_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
 
             if 'totalResults' in args: 
                 totalResults = int(args.get('totalResults'))
@@ -76,8 +100,33 @@ class UsersSCIM(Resource):
                 count = int(args.get('count'))
             else:
                 count = SPCONFIG_JSON['filter']['maxResults']
+            # if the total results are smaller than a page size
             if totalResults < count:
                 count = totalResults
+            # if on the last page and there was no count arg so default was used,
+            # and default is larger than the remaining records, use the number of 
+            # remaining records
+            elif startIndex + count > totalResults + 1:
+                count = totalResults - startIndex + 1
+
+            # if first page, and there will be more than one page, and there is no current cache/lock,
+            # write data to cache and create a cache lock
+            if first_page and startIndex + count < totalResults + 1 and not ((import_type == 'full' and not full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and not incremental_import_cache.check_for_lock_file())):
+                if import_type == 'full':
+                    full_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
+                    full_import_cache.create_lock_file()
+                elif import_type == 'incremental':
+                    incremental_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
+                    incremental_import_cache.create_lock_file()
+            # if last page clean up cache lock
+            if startIndex + count == totalResults + 1 and not first_page:
+                logger.info('Last page, attempting to clean up cache lock')
+                if import_type == 'full':
+                    full_import_cache.append_lock_file('end')
+                    full_import_cache.cleanup_lock_file()
+                elif import_type == 'incremental':
+                    incremental_import_cache.append_lock_file('end')
+                    incremental_import_cache.cleanup_lock_file()
 
             response = ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource
             logger.debug('Response: %s' % response)

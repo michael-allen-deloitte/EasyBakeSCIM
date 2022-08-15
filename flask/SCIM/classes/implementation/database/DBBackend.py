@@ -6,6 +6,7 @@ from SCIM import db, LOG_LEVEL, LOG_FORMAT
 from SCIM.classes.generic.Backend import UserBackend
 from SCIM.classes.generic.SCIMUser import SCIMUser
 from SCIM.classes.implementation.database.models import UsersDB
+from SCIM.classes.implementation.filters.CustomFilter import CustomFilter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -24,12 +25,25 @@ class DBBackend(UserBackend):
         else:
             return user_db_object[0].scim_user
 
-    def list_users(self, filter=None) -> List[SCIMUser]:
+    def list_users(self, filter: str = None) -> List[SCIMUser]:
         out: List[SCIMUser] = []
+        user_db_objs: List[UsersDB] = []
+
         if filter is None:
-            user_db_objs: List[UsersDB] = UsersDB.query.all()
-        for user in user_db_objs:
+            user_db_objs = UsersDB.query.all()
+        else:
+            filter_obj = CustomFilter(filter)
+                
+            if filter_obj.comparator == 'lt':
+                user_db_objs = UsersDB.query.filter(filter_obj.search_key < filter_obj.search_value).all()
+            elif filter_obj.comparator == 'eq':
+                user_db_objs = UsersDB.query.filter(filter_obj.search_key == filter_obj.search_value).all()
+            elif filter_obj.comparator == 'gt':
+                user_db_objs = UsersDB.query.filter(filter_obj.search_key > filter_obj.search_value).all()
+
+        for user in user_db_objs: 
             out.append(user.scim_user)
+
         return out
     
     def create_user(self, scim_user: SCIMUser) -> SCIMUser:
