@@ -33,7 +33,8 @@ class DBBackend(UserBackend):
             user_db_objs = UsersDB.query.all()
         else:
             filter_obj = CustomFilter(filter)
-                
+
+
             if filter_obj.comparator == 'lt':
                 user_db_objs = UsersDB.query.filter(filter_obj.search_key < filter_obj.search_value).all()
             elif filter_obj.comparator == 'eq':

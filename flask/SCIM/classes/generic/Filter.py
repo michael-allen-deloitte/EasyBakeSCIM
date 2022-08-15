@@ -11,14 +11,14 @@ class Filter:
             filter_match = match('(\w+) (\w+) ([a-zA-Z0-9_]+)', filter)
 
         filter_args = filter_match.groups()
-
-        self.search_key = getattr(UsersDB, filter_args[0])
         self.comparator = filter_args[1]
 
         if filter_args[0] == 'id':
             self.search_value = str(filter_args[2])
+            self.search_key = getattr(UsersDB, filter_args[0])
         elif filter_args[0] == 'meta.lastModified':
             self.search_value = datetime.datetime.fromisoformat(filter_args[2])
+            self.search_key = getattr(UsersDB, 'lastModified')
         else:
             self.find_nonstandard_value_type(filter_args)
 

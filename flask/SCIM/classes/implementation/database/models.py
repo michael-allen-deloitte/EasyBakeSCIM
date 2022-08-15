@@ -5,16 +5,19 @@ from SCIM.classes.generic.SCIMUser import SCIMUser
 
 class UsersDB(db.Model):
     __tablename__ = 'users'
-    id = db.Column(db.String(50), primary_key=True, unique=True)
-    firstName = db.Column(db.String(30), nullable=False)
-    lastName = db.Column(db.String(30), nullable=False)
-    email = db.Column(db.String(30), nullable=False)
-    phone = db.Column(db.String(15), nullable=True)
-    city = db.Column(db.String(25), nullable=True)
-    password = db.Column(db.String(30), nullable=False)
-    favorite_color = db.Column(db.String(10), nullable=True)
-    active = db.Column(db.Boolean, nullable=False)
-    number = db.Column(db.Integer, nullable=True)
+    # Set variable names to be what Okta will send them over as, and map to 
+    # the DB column via the 'name' argument. If it is not done this way
+    # the filter objects will not work properly
+    id = db.Column(db.String(50), primary_key=True, unique=True, name='id')
+    firstName = db.Column(db.String(30), nullable=False, name='firstName')
+    lastName = db.Column(db.String(30), nullable=False, name='lastName')
+    email = db.Column(db.String(30), nullable=False, name='email')
+    phone = db.Column(db.String(15), nullable=True, name='phone')
+    city = db.Column(db.String(25), nullable=True, name='city')
+    password = db.Column(db.String(30), nullable=False, name='password')
+    favorite_color = db.Column(db.String(10), nullable=True, name='favorite_color')
+    active = db.Column(db.Boolean, nullable=False, name='active')
+    number = db.Column(db.Integer, nullable=True, name='number')
 
     @property
     def scim_user(self) -> SCIMUser:
