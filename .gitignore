@@ -4,6 +4,7 @@ config.ini
 example.db
 __pycache__/
 .vscode
-.cache
+*cache.json
+*cache.json.lock
 *.crt
 *.key
