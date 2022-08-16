@@ -26,6 +26,7 @@ headerName =
 headerValue = 
 
 [SCIM Features]
+# these values will be true/false
 PUSH_NEW_USER = 
 PUSH_PASSWORD_UPDATES = 
 PUSH_PENDING_USERS = 
@@ -38,7 +39,12 @@ IMPORT_PROFILE_UPDATES =
 GROUP_PUSH = 
 
 [Cache]
-# in minutes
-# IMPLEMENT LOGIC FOR 0 LIFETIME, MAKE IT CLEAR CACHE WHEN LOCK FILE IS CLEANED UP
-lifetime = 45
+# If this value is set to 0 the cache will be cleaned up along with the lock file
+lifetime_min = 45
+# This determines how long a lock file will be honored since its last modification.
+# If something happens during pagination and the loop gets broken, the lock file will
+# persist, this value sets the time after which it is assumed an issue occured and 
+# the lock file is okay to clean up. This value should be larger than the average
+# run time of a full import, but shorter than the frequency of said imports. 
+lock_lifetime_min = 45
 dir = SCIM/.cache

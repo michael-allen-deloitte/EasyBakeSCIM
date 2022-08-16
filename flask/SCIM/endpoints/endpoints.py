@@ -41,6 +41,14 @@ class ServiceProviderConfigSCIM(Resource):
         except Exception as e:
             return handle_server_side_error(e)
 
+class ClearCache(Resource):
+    def get(self):
+        try:
+            full_import_cache.force_clear_cache()
+            incremental_import_cache.force_clear_cache()
+            return '', 204
+        except Exception as e:
+            return handle_server_side_error(e)
 
 class UsersSCIM(Resource):
     # retrieve users: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-users
@@ -85,8 +93,8 @@ class UsersSCIM(Resource):
                 try:
                     if import_type == 'full':  users = full_import_cache.read_json_cache()
                     elif import_type == 'incremental': incremental_import_cache.read_json_cache()
-                except TimeoutError:
-                    logger.info('Pulling from DB and saving new cache')
+                except (TimeoutError, FileNotFoundError):
+                    logger.info('Error reading cache, either no longer valid or does not exist. Pulling from DB and saving new cache')
                     users = backend.list_users(filter=filter_string)
                     if import_type == 'full': full_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
                     elif import_type == 'incremental': incremental_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
@@ -111,7 +119,8 @@ class UsersSCIM(Resource):
 
             # if first page, and there will be more than one page, and there is no current cache/lock,
             # write data to cache and create a cache lock
-            if first_page and startIndex + count < totalResults + 1 and not ((import_type == 'full' and not full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and not incremental_import_cache.check_for_lock_file())):
+            if first_page and startIndex + count < totalResults + 1 and ((import_type == 'full' and not full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and not incremental_import_cache.check_for_lock_file())):
+                logger.info('First page of pagination and no cache lock, writing data to cache and creating lock')
                 if import_type == 'full':
                     full_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
                     full_import_cache.create_lock_file()

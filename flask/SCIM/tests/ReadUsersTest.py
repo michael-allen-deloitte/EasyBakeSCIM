@@ -22,18 +22,26 @@ else:
     print('Could not read config file from path %s' % config_path)
     sys.exit(1)
 
-BASE_URL = config['Local Deployment']['base_url']
-GET_ID = config['Local Deployment']['get_id']
+BASE_URL: str = config['Deployment']['base_url']
+GET_ID: str = config['Deployment']['get_id']
+CACHE_DIR: str = config['Cache']['dir'].strip('/').strip('\\')
+LOCAL_DEPLOYMENT: bool = config['Deployment']['local'].lower() == 'true'
 
 class ReadUsersTests(unittest.TestCase):
     def setUp(self) -> None:
-        cache_dir = config['Cache']['dir']
-        if os.path.exists(cache_dir):
-            cache_files = os.listdir(cache_dir)
-            if len(cache_files) > 0:
-                logger.info('Cleaning up any existing cache')
-                for file in cache_files:
-                    os.remove(os.path.join(cache_dir, file))
+        if LOCAL_DEPLOYMENT:
+            cache_dir = config['Cache']['dir']
+            if os.path.exists(cache_dir):
+                cache_files = os.listdir(cache_dir)
+                if len(cache_files) > 0:
+                    logger.info('Cleaning up any existing local cache')
+                    for file in cache_files:
+                        os.remove(os.path.join(cache_dir, file))
+        else:
+            logger.info('Clearing existing remote cache')
+            request_url = BASE_URL.strip('/') + '/ClearCache'
+            response = requests.get(request_url)
+            self.assertEqual(response.status_code, 204)
 
     def test_list_all_users(self):
         request_url = BASE_URL.strip('/') + '/Users'
@@ -53,14 +61,17 @@ class ReadUsersTests(unittest.TestCase):
         index = 1
         while len(users) < total_results:
             index += 1
-            self.assertTrue(os.path.isfile('../.cache/list_users.json'))
-            self.assertTrue(os.path.isfile('../.cache/list_users.json.lock'))
+            # cant check if these files exist when not running locally
+            if LOCAL_DEPLOYMENT:
+                self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json'))
+                self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?startIndex=%i&count=1&totalResults=%i' % (index, total_results)
             response = requests.get(request_url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())
-        self.assertFalse(os.path.isfile('../.cache/list_users.json.lock'))
+        self.assertEqual(len(users), total_results)
+        if LOCAL_DEPLOYMENT: self.assertFalse(os.path.isfile(CACHE_DIR + '/full_import_cache.json.lock'))
 
     def test_list_users_single_page(self):
         # do get all users with no params to get the total results
