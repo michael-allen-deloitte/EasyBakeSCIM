@@ -30,7 +30,7 @@ def put_file_contents(file_path: str) -> requests.Response:
         test_data = json.load(data_file)
     request_url = BASE_URL.strip('/') + '/Users/' + test_data['id']
     logger.info('Making PUT to %s' % request_url)
-    return requests.put(request_url, json=test_data)
+    return requests.put(request_url, json=test_data, verify=False)
 
 class UpdateUserTests(unittest.TestCase):
     def test_activate_user(self):

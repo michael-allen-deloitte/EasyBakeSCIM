@@ -29,7 +29,7 @@ def post_file_contents(file_path: str) -> requests.Response:
         test_data = json.load(data_file)
     request_url = BASE_URL.strip('/') + '/Users'
     logger.info('Making POST to %s' % request_url)
-    return requests.post(request_url, json=test_data)
+    return requests.post(request_url, json=test_data, verify=False)
 
 class CreateUserTests(unittest.TestCase):
     def test_create_user(self):
