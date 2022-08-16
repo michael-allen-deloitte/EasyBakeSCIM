@@ -40,12 +40,12 @@ class ReadUsersTests(unittest.TestCase):
         else:
             logger.info('Clearing existing remote cache')
             request_url = BASE_URL.strip('/') + '/ClearCache'
-            response = requests.get(request_url)
+            response = requests.get(request_url, verify=False)
             self.assertEqual(response.status_code, 204)
 
     def test_list_all_users(self):
         request_url = BASE_URL.strip('/') + '/Users'
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         logger.info('Response from Connector: %s' % str(response.json()))
@@ -53,7 +53,7 @@ class ReadUsersTests(unittest.TestCase):
     def test_pagination_cache(self):
         users = []
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=1'
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 1)
         users.append(response.json())
@@ -66,7 +66,7 @@ class ReadUsersTests(unittest.TestCase):
                 self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json'))
                 self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?startIndex=%i&count=1&totalResults=%i' % (index, total_results)
-            response = requests.get(request_url)
+            response = requests.get(request_url, verify=False)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())
@@ -76,20 +76,20 @@ class ReadUsersTests(unittest.TestCase):
     def test_list_users_single_page(self):
         # do get all users with no params to get the total results
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=3'
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 3)
         total_results = response.json()['totalResults']
         # get the second page
         request_url = BASE_URL.strip('/') + '/Users?startIndex=4&count=2&totalResults=%i' % total_results
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         logger.info('Second page response: %s' % response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 2)
 
     def test_get_single_user(self):
         request_url = BASE_URL.strip('/') + '/Users/' + GET_ID
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         logger.info(response.json())
         self.assertEqual(response.status_code, 200)
         logger.info('Response from Connector: %s' % str(response.json()))
@@ -97,7 +97,7 @@ class ReadUsersTests(unittest.TestCase):
     def test_list_users_lt_filter(self):
         filter = '?filter=number lt 4'
         request_url = BASE_URL.strip('/') + '/Users' + filter
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         # Expecting 3 returned users
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
@@ -106,7 +106,7 @@ class ReadUsersTests(unittest.TestCase):
     def test_list_users_eq_filter(self):
         filter = '?filter=active eq true'
         request_url = BASE_URL.strip('/') + '/Users' + filter
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         # Expecting 4 returned users
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
@@ -115,7 +115,7 @@ class ReadUsersTests(unittest.TestCase):
     def test_list_users_gt_filter(self):
         filter = '?filter=number gt 5'
         request_url = BASE_URL.strip('/') + '/Users' + filter
-        response = requests.get(request_url)
+        response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         # Expecting 3 returned users
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))

@@ -33,7 +33,7 @@ def creation_time(path_to_file: str) -> float:
 class Cache:
     cache_base_dir: str = config['Cache']['dir']
     cache_lifetime_sec: float = float(config['Cache']['lifetime_min'])*60
-    lock_lifetime_sec: float = float(config['Cache']['lock_lifetime_miin'])*60
+    lock_lifetime_sec: float = float(config['Cache']['lock_lifetime_min'])*60
 
     def __init__(self, file_name: str) -> None:
         if not os.path.exists(self.cache_base_dir):

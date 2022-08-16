@@ -8,6 +8,8 @@ COPY ./flask/SCIM ./SCIM
 COPY ./flask/uwsgi.ini ./uwsgi.ini
 #COPY ./flask/run.py ./run.py
 COPY ./start.sh ./start.sh
+COPY ./nginx/ssl/scim-server.crt /etc/ssl/certs/scim-server.crt
+COPY ./nginx/ssl/scim-server.key /etc/ssl/private/scim-server.key
 
 RUN apt-get clean \
     && apt-get -y update
@@ -23,4 +25,4 @@ COPY ./nginx/nginx.conf /etc/nginx
 RUN chmod +x ./start.sh
 RUN chmod o+rw ./SCIM/.cache
 CMD ["./start.sh"]
-EXPOSE 80
+EXPOSE 443

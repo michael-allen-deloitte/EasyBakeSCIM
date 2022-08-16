@@ -5,3 +5,5 @@ example.db
 __pycache__/
 .vscode
 .cache
+*.crt
+*.key
