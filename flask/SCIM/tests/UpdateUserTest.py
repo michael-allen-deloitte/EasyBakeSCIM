@@ -23,7 +23,7 @@ else:
     print('Could not read config file from path %s' % config_path)
     sys.exit(1)
 
-BASE_URL = config['Local Deployment']['base_url']
+BASE_URL = config['Deployment']['base_url']
 
 def put_file_contents(file_path: str) -> requests.Response:
     with open(file_path, 'r') as data_file:
