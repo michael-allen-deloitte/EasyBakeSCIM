@@ -18,6 +18,7 @@ class UsersDB(db.Model):
     favorite_color = db.Column(db.String(10), nullable=True, name='favorite_color')
     active = db.Column(db.Boolean, nullable=False, name='active')
     number = db.Column(db.Integer, nullable=True, name='number')
+    lastModified = db.Column(db.DateTime, nullable=True, name='lastModified')
 
     @property
     def scim_user(self) -> SCIMUser:
@@ -46,7 +47,7 @@ class UsersDB(db.Model):
             'email': self.email,
             'phone': self.phone,
             'city': self.city,
-            # in a real implementation you would want to exclude this
+            # in a real implementation you would want to exclude the password
             'password': self.password,
             'favorite_color': self.favorite_color,
             'active': self.active
@@ -61,7 +62,7 @@ class UsersDB(db.Model):
             'email': self.email,
             'phone': self.phone,
             'city': self.city,
-            # in a real implementation you would want to exclude this
+            # in a real implementation you would want to exclude the password
             'password': self.password,
             'favorite_color': self.favorite_color,
             'active': self.active

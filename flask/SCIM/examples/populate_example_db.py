@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from SCIM import db
 from SCIM.classes.implementation.database.models import UsersDB
 
@@ -8,9 +10,9 @@ def read_data(in_path):
             if 'firstName' in line:
                 pass
             else:
-                firstName, lastName, email, phone, guid, city, password, favorite_color, active, number = line.split(',')
+                firstName, lastName, email, phone, guid, city, password, favorite_color, active, number, lastModified = line.split(',')
                 db_obj = UsersDB(id=guid, firstName=firstName, lastName=lastName, email=email, phone=phone, city=city, password=password, \
-                    favorite_color=favorite_color, active=active == 'true', number=number)
+                    favorite_color=favorite_color, active=active == 'true', number=int(number), lastModified=datetime.fromisoformat(lastModified.strip().strip('Z')))
                 out.append(db_obj)
     return out
 

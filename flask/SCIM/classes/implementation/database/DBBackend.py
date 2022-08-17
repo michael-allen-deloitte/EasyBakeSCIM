@@ -1,6 +1,7 @@
 import logging
 import uuid
 from typing import List
+from datetime import datetime
 
 from SCIM import db, LOG_LEVEL, LOG_FORMAT
 from SCIM.classes.generic.Backend import UserBackend
@@ -72,6 +73,7 @@ class DBBackend(UserBackend):
         except KeyError:
             pass
 
+        db_user.lastModified = datetime.now()
         db.session.add(db_user)
         db.session.commit()
         logger.debug('User create sucessful: %s' % str(db_user))
@@ -101,5 +103,6 @@ class DBBackend(UserBackend):
         except KeyError:
             user_db_object.number = None
         user_db_object.active = scim_user.active
+        user_db_object.lastModified = datetime.now()
         db.session.commit()
         return UsersDB.query.filter_by(id=scim_user.id).first().scim_user

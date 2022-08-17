@@ -6,6 +6,11 @@ from flask_restful import Resource
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
 from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
+# do the same pattern for your custom filter implementation as Backend
+# if using the generic Filter object still add the line like this:
+# from SCIM.classes.generic.Filter import Filter as FilterImplementation
+from SCIM.classes.implementation.filters.CustomFilter import CustomFilter as FilterImplementation
+from SCIM.classes.generic.Filter import FilterValidationError
 from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
 from SCIM.classes.generic.Cache import Cache
@@ -31,6 +36,11 @@ def handle_server_side_error(e: Exception):
     logger.error(error_json)
     return error_response
 
+def handle_validation_error(e: Exception):
+    error_json = scim_error("An validation error has occured: %s" % e, 400, format_exc())
+    error_response = make_response(error_json, 400)
+    logger.error(error_json)
+    return error_response
 
 class ServiceProviderConfigSCIM(Resource):
     def get(self):
@@ -59,6 +69,11 @@ class UsersSCIM(Resource):
 
             if 'filter' in args:
                 filter_string = args['filter']
+                logger.debug('Filter string received: %s' % filter_string)
+                try:
+                    FilterImplementation(filter_string)
+                except FilterValidationError as e:
+                    return handle_validation_error(e)
                 if 'meta.lastModified' in filter_string:
                     import_type = 'incremental'
                 else:
@@ -92,7 +107,7 @@ class UsersSCIM(Resource):
                     elif import_type == 'incremental': incremental_import_cache.append_lock_file('start')
                 try:
                     if import_type == 'full':  users = full_import_cache.read_json_cache()
-                    elif import_type == 'incremental': incremental_import_cache.read_json_cache()
+                    elif import_type == 'incremental': users = incremental_import_cache.read_json_cache()
                 except (TimeoutError, FileNotFoundError):
                     logger.info('Error reading cache, either no longer valid or does not exist. Pulling from DB and saving new cache')
                     users = backend.list_users(filter=filter_string)
