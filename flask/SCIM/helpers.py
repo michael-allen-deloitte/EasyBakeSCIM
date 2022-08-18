@@ -48,7 +48,10 @@ def create_spconfig_json() -> dict:
         'filter': {'supported': True, 'maxResults': 200},
         'authenticationSchemes': []
     }
-    possible_provisioning_features = config['SCIM Features'].keys()
+    possible_provisioning_features = list(config['SCIM Features'].keys())
+    # remove this feature as its not one of Okta's, it is used in _init__.py to determine
+    # if the /Groups endpoint should be included with the user import features
+    possible_provisioning_features.remove('IMPORT_GROUPS_WITH_USERS'.lower())
     supported_provisioning_features = []
     for feature in possible_provisioning_features:
         if config['SCIM Features'][feature].lower() == 'true': supported_provisioning_features.append(feature.upper())

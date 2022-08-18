@@ -26,6 +26,7 @@ if __name__ == '__main__':
             cache_dir = config['Cache']['dir']
             if os.path.exists(cache_dir):
                 cache_files = os.listdir(cache_dir)
+                cache_files.remove('empty')
                 if len(cache_files) > 0:
                     logger.info('Cleaning up any existing cache')
                     for file in cache_files:

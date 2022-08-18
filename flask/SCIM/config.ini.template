@@ -5,10 +5,12 @@ backend_type = database
 
 [Okta]
 # this value is taken from the URL of the app this is connected to in okta
+# use onprem_app for local db and test cases
 schema = 
 
 [Database]
-# local determines if the connector will attempt to connect to the database with info from below, or if it will just populate and use a local sqllite db (mostly for testing)
+# local determines if the connector will attempt to connect to the database with info from below, 
+# or if it will just populate and use a local sqllite db (mostly for testing)
 local =
 # if local = true then the rest of the values in this section are ignored 
 host = 
@@ -26,16 +28,45 @@ headerName =
 headerValue = 
 
 [SCIM Features]
-# these values will be true/false
+# these values will be true/false and will be used to determine what endpoints will be enabled
+# for your connector. All endpoints that Okta supports exist in the base connector (unimplemented),
+# but we only want to expose the ones that are in use, and return a 404 or 501 for all that are not.
+# see the list of features here: https://help.okta.com/en-us/Content/Topics/Provisioning/opp/OPP-create-SCIM-connectors.htm
+# see below for method to endpoint mappings
+# oktaFunction = Backend implementation function = HTTP endpoint
+# getUsers = UserBackend.list_users() = GET /Users
+# getUser = UserBackend.get_user() = GET /Users/<user_id>
+# createUser = UserBackend.create_user() = POST /Users
+# updateUser = UserBackend.update_user() = PUT /Users/<user_id>
+# getGroups = Not implemented in EasyBakeSCIM yet = GET /Groups
+# getGroup = Not implemented in EasyBakeSCIM yet = GET /Groups/<group_id>
+# createGroup = Not implemented in EasyBakeSCIM yet = POST /Groups
+# updateGroup = Not implemented in EasyBakeSCIM yet = PUT /Groups/<group_id>
+# deleteGroup = Not implemented in EasyBakeSCIM yet = DELETE /Groups/<group_id>
+# above each feature will be a comment letting you know what methods they use
+# createUser, getUsers
 PUSH_NEW_USER = 
+# updateUser
 PUSH_PASSWORD_UPDATES = 
+# createUser, updateUser, getUsers
 PUSH_PENDING_USERS = 
+# updateUser
 PUSH_PROFILE_UPDATES = 
+# updateUser
 PUSH_USER_DEACTIVATION = 
+# updateUser
 REACTIVATE_USERS = 
+# getUsers
 IMPORT_NEW_USERS = 
+# getUsers
 OPP_SCIM_INCREMENTAL_IMPORTS = 
+# IMPORT_GROUPS_WITH_USERS is not an feature according to Okta, but will be used to determine
+# if the /Groups endpoint needs to be enabled for the above IMPORT features
+# getGroups
+IMPORT_GROUPS_WITH_USERS = 
+# getUser
 IMPORT_PROFILE_UPDATES = 
+# getGroup, createGroup, updateGroup, deleteGroup
 GROUP_PUSH = 
 
 [Cache]

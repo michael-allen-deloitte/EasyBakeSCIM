@@ -25,12 +25,14 @@ class UserBackend:
         pass
 
     # should only be called in PATCH
+    # not supported in OPP conectors yet
     def enable_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to enable user here
         # this function should take a User object and return nothing, only error out if there was an issue
         pass
 
     # should only be called in PATCH
+    # not supported in OPP conectors yet
     def disable_user(self, scim_user: SCIMUser) -> SCIMUser:
         # code to disable user here
         # this function should take a User object and return nothing, only error out if there was an issue

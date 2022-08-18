@@ -43,6 +43,22 @@ class ReadUsersTests(unittest.TestCase):
             request_url = BASE_URL.strip('/') + '/ClearCache'
             response = requests.get(request_url, verify=False)
             self.assertEqual(response.status_code, 204)
+    
+    def tearDown(self) -> None:
+        if LOCAL_DEPLOYMENT:
+            cache_dir = config['Cache']['dir']
+            if os.path.exists(cache_dir):
+                cache_files = os.listdir(cache_dir)
+                cache_files.remove('empty')
+                if len(cache_files) > 0:
+                    logger.info('Cleaning up any existing local cache')
+                    for file in cache_files:
+                        os.remove(os.path.join(cache_dir, file))
+        else:
+            logger.info('Clearing existing remote cache')
+            request_url = BASE_URL.strip('/') + '/ClearCache'
+            response = requests.get(request_url, verify=False)
+            self.assertEqual(response.status_code, 204)
 
     def test_list_all_users(self):
         request_url = BASE_URL.strip('/') + '/Users'

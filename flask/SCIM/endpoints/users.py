@@ -1,8 +1,9 @@
 import logging
-from traceback import format_exc
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, Response
 from flask_restful import Resource
+from itsdangerous import exc
 
+from SCIM import SUPPORTED_PROVISIONING_FEATURES
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
 from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
@@ -13,8 +14,7 @@ from SCIM.classes.implementation.filters.CustomFilter import CustomFilter as Fil
 from SCIM.classes.generic.Filter import FilterValidationError
 from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
-from SCIM.classes.generic.Cache import Cache
-from SCIM.helpers import scim_error, create_spconfig_json
+from SCIM.endpoints.general import handle_server_side_error, handle_validation_error, full_import_cache, incremental_import_cache, SPCONFIG_JSON
 
 LOG_LEVEL = logging.DEBUG
 LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
@@ -25,45 +25,27 @@ stream_handler.setFormatter(LOG_FORMAT)
 logger.addHandler(stream_handler)
 
 backend = Backend()
-full_import_cache = Cache('full_import_cache.json')
-incremental_import_cache = Cache('incremental_import_cache.json')
-
-SPCONFIG_JSON = create_spconfig_json()
-
-def handle_server_side_error(e: Exception):
-    error_json = scim_error("An unexpected error has occured: %s" % e, 500, format_exc())
-    error_response = make_response(error_json, 500)
-    logger.error(error_json)
-    return error_response
-
-def handle_validation_error(e: Exception):
-    error_json = scim_error("An validation error has occured: %s" % e, 400, format_exc())
-    error_response = make_response(error_json, 400)
-    logger.error(error_json)
-    return error_response
-
-class ServiceProviderConfigSCIM(Resource):
-    def get(self):
-        try:
-            response = jsonify(SPCONFIG_JSON)
-            logger.debug('Response: %s' % response)
-            return response
-        except Exception as e:
-            return handle_server_side_error(e)
-
-class ClearCache(Resource):
-    def get(self):
-        try:
-            full_import_cache.force_clear_cache()
-            incremental_import_cache.force_clear_cache()
-            return '', 204
-        except Exception as e:
-            return handle_server_side_error(e)
 
 class UsersSCIM(Resource):
+    GET_FEATURES = [
+        'PUSH_NEW_USER',
+        'PUSH_PENDING_USERS',
+        'IMPORT_NEW_USERS',
+        'OPP_SCIM_INCREMENTAL_IMPORTS'
+    ]
+    POST_FEATURES = [
+        'PUSH_NEW_USER',
+        'PUSH_PENDING_USERS'
+    ]
     # retrieve users: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-users
-    def get(self) -> dict:
+    def get(self) -> Response:
         try:
+            # if this method is not needed for the supported features return a 501 Not Implemented
+            for feature in self.GET_FEATURES:
+                if feature in SUPPORTED_PROVISIONING_FEATURES:
+                    break
+            else:
+                return make_response('', 501)
             # get url parameters
             args = request.args
 
@@ -152,61 +134,102 @@ class UsersSCIM(Resource):
                     incremental_import_cache.append_lock_file('end')
                     incremental_import_cache.cleanup_lock_file()
 
-            response = ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource
-            logger.debug('Response: %s' % response)
+            response: Response = jsonify(ListResponse(users[startIndex-1:startIndex-1+count], startIndex, count, totalResults).scim_resource)
+            logger.debug('Response: %s' % response.get_json())
+            response.status_code = 200
             return response
         except Exception as e:
             return handle_server_side_error(e)
 
     # create user: https://developer.okta.com/docs/reference/scim/scim-20/#create-the-user
-    def post(self):
+    def post(self) -> Response:
+        try:
+            # if this method is not needed for the supported features return a 501 Not Implemented
+            for feature in self.POST_FEATURES:
+                if feature in SUPPORTED_PROVISIONING_FEATURES:
+                    break
+            else:
+                return make_response('', 501)
+        except Exception as e:
+            return handle_server_side_error(e)
+        
         # get request JSON, error out if invalid
         try:
             scim_json = request.get_json(force=True)
         except Exception as e:
-            return scim_error('Invalid JSON', 400)
+            return handle_validation_error(e)
 
         try:
             in_scim_user = SCIMUser(scim_json, init_type='scim')
             logger.debug('Input: %s' % in_scim_user.scim_resource)
             out_scim_user = backend.create_user(in_scim_user)
-            response = jsonify(out_scim_user.scim_resource)
-            logger.debug('Response: %s' % response)
-            return make_response(response, 201)
+            response: Response = jsonify(out_scim_user.scim_resource)
+            logger.debug('Response: %s' % response.get_json())
+            response.status_code = 201
+            return response
         except Exception as e:
             return handle_server_side_error(e)
 
 
 class UserSpecificSCIM(Resource):
+    GET_FEATURES = [
+        'IMPORT_PROFILE_UPDATES'
+    ]
+    PUT_FEATURES = [
+        'PUSH_PASSWORD_UPDATES',
+        'PUSH_PENDING_USERS',
+        'PUSH_PROFILE_UPDATES',
+        'PUSH_USER_DEACTIVATION',
+        'REACTIVATE_USERS'
+    ]
     # get a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-a-specific-user
-    def get(self, user_id: str):
+    def get(self, user_id: str) -> Response:
         try:
+            # if this method is not needed for the supported features return a 501 Not Implemented
+            for feature in self.GET_FEATURES:
+                if feature in SUPPORTED_PROVISIONING_FEATURES:
+                    break
+            else:
+                return make_response('', 501)
+
             scim_user: SCIMUser = backend.get_user(user_id)
             if scim_user is not None:
                 list_resp = ListResponse([scim_user], start_index=1, count=None, total_results=1)
             else:
                 list_resp = ListResponse([])
-            response = list_resp.scim_resource
-            logger.debug('Response: %s' % response)
+            response: Response = jsonify(list_resp.scim_resource)
+            logger.debug('Response: %s' % response.get_json())
+            response.status_code = 200
             return response
         except Exception as e:
             return handle_server_side_error(e)
 
     # update a specific user: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-user-put
     # this is also used for user deactivations in AIN apps
-    def put(self, user_id: str):
+    def put(self, user_id: str) -> Response:
+        try:
+            # if this method is not needed for the supported features return a 501 Not Implemented
+            for feature in self.PUT_FEATURES:
+                if feature in SUPPORTED_PROVISIONING_FEATURES:
+                    break
+            else:
+                return make_response('', 501)
+        except Exception as e:
+            return handle_server_side_error(e)
+
         # get request JSON, error out if invalid
         try:
             scim_json = request.get_json(force=True)
         except Exception as e:
-            return scim_error('Invalid JSON', 400)
+            return handle_validation_error(e)
 
         try:
             in_scim_user = SCIMUser(scim_json, init_type='scim')
             logger.debug('Input: %s' % in_scim_user.scim_resource)
             out_scim_user = backend.update_user(in_scim_user)
-            response = jsonify(out_scim_user.scim_resource)
-            logger.debug('Response: %s' % response)
+            response: Response = jsonify(out_scim_user.scim_resource)
+            logger.debug('Response: %s' % response.get_json())
+            response.status_code = 200
             return response
         except Exception as e:
             return handle_server_side_error(e)
@@ -224,53 +247,3 @@ class UserSpecificSCIM(Resource):
     """
 
     # Okta's notes on user deletion: https://developer.okta.com/docs/concepts/scim/#delete-deprovision
-
-
-class GroupsSCIM(Resource):
-    # retreive groups: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-groups
-    def get(self) -> dict:
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
-
-    # create group: https://developer.okta.com/docs/reference/scim/scim-20/#create-groups
-    def post(self):
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
-
-
-class GroupsSpecificSCIM(Resource):
-    # retreive specific group: https://developer.okta.com/docs/reference/scim/scim-20/#retrieve-specific-groups
-    def get(self, group_id: str):
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
-
-    # update group name: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-group-name
-    # update group membership: https://developer.okta.com/docs/reference/scim/scim-20/#update-specific-group-membership
-    # this is for AIW applications
-    def put(self, group_id: str):
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
-
-    # update group name: https://developer.okta.com/docs/reference/scim/scim-20/#update-a-specific-group-name
-    # update group membership: https://developer.okta.com/docs/reference/scim/scim-20/#update-specific-group-membership
-    # this is for OIN applications
-    def patch(self, group_id: str):
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
-
-    # delete group: https://developer.okta.com/docs/reference/scim/scim-20/#delete-a-specific-group
-    def delete(self, group_id: str):
-        try:
-            pass
-        except Exception as e:
-            return handle_server_side_error(e)
