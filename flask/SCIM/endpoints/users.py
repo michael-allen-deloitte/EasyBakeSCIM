@@ -1,4 +1,5 @@
 import logging
+from typing import List
 from flask import request, jsonify, make_response, Response
 from flask_restful import Resource
 from itsdangerous import exc
@@ -26,6 +27,13 @@ logger.addHandler(stream_handler)
 
 backend = Backend()
 
+def check_feature_supported(feature_list: List[str]) -> bool:
+    for feature in feature_list:
+        if feature in SUPPORTED_PROVISIONING_FEATURES:
+            return True
+    else:
+        return False
+
 class UsersSCIM(Resource):
     GET_FEATURES = [
         'PUSH_NEW_USER',
@@ -41,11 +49,7 @@ class UsersSCIM(Resource):
     def get(self) -> Response:
         try:
             # if this method is not needed for the supported features return a 501 Not Implemented
-            for feature in self.GET_FEATURES:
-                if feature in SUPPORTED_PROVISIONING_FEATURES:
-                    break
-            else:
-                return make_response('', 501)
+            if not check_feature_supported(self.GET_FEATURES): return make_response('', 501)
             # get url parameters
             args = request.args
 
@@ -145,11 +149,7 @@ class UsersSCIM(Resource):
     def post(self) -> Response:
         try:
             # if this method is not needed for the supported features return a 501 Not Implemented
-            for feature in self.POST_FEATURES:
-                if feature in SUPPORTED_PROVISIONING_FEATURES:
-                    break
-            else:
-                return make_response('', 501)
+            if not check_feature_supported(self.POST_FEATURES): return make_response('', 501)
         except Exception as e:
             return handle_server_side_error(e)
         
@@ -186,11 +186,7 @@ class UserSpecificSCIM(Resource):
     def get(self, user_id: str) -> Response:
         try:
             # if this method is not needed for the supported features return a 501 Not Implemented
-            for feature in self.GET_FEATURES:
-                if feature in SUPPORTED_PROVISIONING_FEATURES:
-                    break
-            else:
-                return make_response('', 501)
+            if not check_feature_supported(self.GET_FEATURES): return make_response('', 501)
 
             scim_user: SCIMUser = backend.get_user(user_id)
             if scim_user is not None:
@@ -209,11 +205,7 @@ class UserSpecificSCIM(Resource):
     def put(self, user_id: str) -> Response:
         try:
             # if this method is not needed for the supported features return a 501 Not Implemented
-            for feature in self.PUT_FEATURES:
-                if feature in SUPPORTED_PROVISIONING_FEATURES:
-                    break
-            else:
-                return make_response('', 501)
+            if not check_feature_supported(self.PUT_FEATURES): return make_response('', 501)
         except Exception as e:
             return handle_server_side_error(e)
 
