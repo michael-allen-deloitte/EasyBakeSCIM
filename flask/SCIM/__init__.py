@@ -31,6 +31,7 @@ api: Api = Api(app)
 
 if BACKEND_TYPE == 'database':
     from flask_sqlalchemy import SQLAlchemy
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     LOCAL_DATABASE = config['Database']['local'].lower() == 'true'
     if LOCAL_DATABASE:
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
@@ -45,7 +46,7 @@ for feature in possible_provisioning_features:
     if config['SCIM Features'][feature].lower() == 'true': SUPPORTED_PROVISIONING_FEATURES.append(feature.upper())
 
 users_features = [
-    'PUSH_NEW_USER',
+    'PUSH_NEW_USERS',
     'PUSH_PENDING_USERS',
     'IMPORT_NEW_USERS',
     'OPP_SCIM_INCREMENTAL_IMPORTS'
@@ -64,9 +65,10 @@ groups_features = [
 ]
 group_specific_features = ['GROUP_PUSH']
 
-from SCIM.endpoints.general import ServiceProviderConfigSCIM, ClearCache
+from SCIM.endpoints.general import ServiceProviderConfigSCIM, ClearCache, HealthCheck
 api.add_resource(ServiceProviderConfigSCIM, '/ServiceProviderConfigs')
 api.add_resource(ClearCache, '/ClearCache')
+api.add_resource(HealthCheck, '/')
 
 for feature in users_features:
     if feature in SUPPORTED_PROVISIONING_FEATURES:

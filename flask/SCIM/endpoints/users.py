@@ -36,7 +36,7 @@ def check_feature_supported(feature_list: List[str]) -> bool:
 
 class UsersSCIM(Resource):
     GET_FEATURES = [
-        'PUSH_NEW_USER',
+        'PUSH_NEW_USERS',
         'PUSH_PENDING_USERS',
         'IMPORT_NEW_USERS',
         'OPP_SCIM_INCREMENTAL_IMPORTS'

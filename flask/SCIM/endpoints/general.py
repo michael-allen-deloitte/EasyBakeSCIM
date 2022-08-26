@@ -49,3 +49,7 @@ class ClearCache(Resource):
             return make_response('', 204)
         except Exception as e:
             return handle_server_side_error(e)
+
+class HealthCheck(Resource):
+    def get(self) -> Response:
+        return make_response('', 200)
