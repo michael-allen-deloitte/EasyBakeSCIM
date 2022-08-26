@@ -1,3 +1,10 @@
 .idea/
 site.db
 config.ini
+example.db
+__pycache__/
+.vscode
+*cache.json
+*cache.json.lock
+*.crt
+*.key
