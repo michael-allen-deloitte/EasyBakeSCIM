@@ -4,10 +4,10 @@ from typing import List
 from datetime import datetime
 
 from SCIM import db, LOG_LEVEL, LOG_FORMAT
-from SCIM.classes.generic.Backend import UserBackend
+from SCIM.classes.generic.UsersBackend import UserBackend
 from SCIM.classes.generic.SCIMUser import SCIMUser
 from SCIM.classes.implementation.database.models import UsersDB
-from SCIM.classes.implementation.filters.CustomFilter import CustomFilter
+from SCIM.classes.implementation.database.users.DBUsersFilter import DBUsersFilter
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOG_LEVEL)
@@ -15,7 +15,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(LOG_FORMAT)
 logger.addHandler(stream_handler)
 
-class DBBackend(UserBackend):
+class DBUsersBackend(UserBackend):
     def get_user(self, user_id: str) -> SCIMUser:
         user_db_object: List[UsersDB] = UsersDB.query.filter_by(id=user_id).all()
         if len(user_db_object) > 1:
@@ -31,9 +31,9 @@ class DBBackend(UserBackend):
         user_db_objs: List[UsersDB] = []
 
         if filter is None:
-            user_db_objs = UsersDB.query.all()
+            user_db_objs: List[UsersDB] = UsersDB.query.all()
         else:
-            filter_obj = CustomFilter(filter)
+            filter_obj = DBUsersFilter(filter)
 
 
             if filter_obj.comparator == 'lt':
@@ -82,13 +82,15 @@ class DBBackend(UserBackend):
     def update_user(self, scim_user: SCIMUser) -> SCIMUser:
         # we can assume they exist because a get is always called before the update to check for existance 
         logger.debug('Looking up user with ID %s in DB' % scim_user.id)
-        user_db_object = UsersDB.query.filter_by(id=scim_user.id).first()
+        user_db_object: UsersDB = UsersDB.query.filter_by(id=scim_user.id).first()
         user_db_object.firstName = scim_user.givenName
         user_db_object.lastName = scim_user.familyName
         user_db_object.email = scim_user.email
         user_db_object.phone = scim_user.mobilePhone
+        user_db_object.active = scim_user.active
         # if the password is not specified do nothing with it (should only be sent on activations or password updates)
         if scim_user.password != '': user_db_object.password = scim_user.password
+        
         # need to check for key errors (PUTs are replcement updates so if they dont exist set them to None)
         try:
             user_db_object.city = scim_user.custom_attributes['city']
@@ -102,7 +104,8 @@ class DBBackend(UserBackend):
             user_db_object.number = scim_user.custom_attributes['number']
         except KeyError:
             user_db_object.number = None
-        user_db_object.active = scim_user.active
+        
         user_db_object.lastModified = datetime.now()
+        
         db.session.commit()
         return UsersDB.query.filter_by(id=scim_user.id).first().scim_user

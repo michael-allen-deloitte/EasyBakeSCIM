@@ -1,9 +1,10 @@
 from typing import List, Union
 
 from SCIM.classes.generic.SCIMUser import SCIMUser
+from SCIM.classes.generic.SCIMGroup import SCIMGroup
 
 class ListResponse:
-    def __init__(self, list: Union[List[SCIMUser], List[dict]], start_index:int=1, count:int=None, total_results:int=0):
+    def __init__(self, list: Union[List[SCIMUser], List[dict], List[SCIMGroup]], start_index:int=1, count:int=None, total_results:int=0):
         self.list = list
         self.start_index = start_index
         self.count = count
@@ -18,7 +19,7 @@ class ListResponse:
             "Resources": []
         }
         resources = []
-        if self.list != [] and type(self.list[0]) == SCIMUser:
+        if self.list != [] and (type(self.list[0]) == SCIMUser or type(self.list[0]) == SCIMGroup):
             for item in self.list:
                 resources.append(item.scim_resource)
         else:

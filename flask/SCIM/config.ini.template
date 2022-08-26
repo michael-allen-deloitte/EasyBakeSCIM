@@ -45,7 +45,7 @@ headerValue =
 # deleteGroup = Not implemented in EasyBakeSCIM yet = DELETE /Groups/<group_id>
 # above each feature will be a comment letting you know what methods they use
 # createUser, getUsers
-PUSH_NEW_USER = 
+PUSH_NEW_USERS = 
 # updateUser
 PUSH_PASSWORD_UPDATES = 
 # createUser, updateUser, getUsers

@@ -2,16 +2,15 @@ import logging
 from typing import List
 from flask import request, jsonify, make_response, Response
 from flask_restful import Resource
-from itsdangerous import exc
 
 from SCIM import SUPPORTED_PROVISIONING_FEATURES
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
-from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
+from SCIM.classes.implementation.database.users.DBUsersBackend import DBUsersBackend as Backend
 # do the same pattern for your custom filter implementation as Backend
 # if using the generic Filter object still add the line like this:
 # from SCIM.classes.generic.Filter import Filter as FilterImplementation
-from SCIM.classes.implementation.filters.CustomFilter import CustomFilter as FilterImplementation
+from SCIM.classes.implementation.database.users.DBUsersFilter import DBUsersFilter as FilterImplementation
 from SCIM.classes.generic.Filter import FilterValidationError
 from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
@@ -77,11 +76,11 @@ class UsersSCIM(Resource):
             # if not doing an import (ex: getting user before create/update) dont bother
             # with the cache
             if import_type == 'other':
-                logger.info('Non-import, calling DB')
+                logger.info('Non-import, calling backend')
                 users = backend.list_users(filter=filter_string)
             # check if first page and no existing cache lock, if so, call DB
             elif first_page and ((import_type == 'full' and not full_import_cache.check_for_lock_file()) or (import_type == 'incremental' and not incremental_import_cache.check_for_lock_file())):
-                logger.info('First page and no cache lock, reading users from database')
+                logger.info('First page and no cache lock, reading users from backend')
                 users = backend.list_users(filter=filter_string)
             # else just get the users from the cache
             else:
@@ -95,7 +94,7 @@ class UsersSCIM(Resource):
                     if import_type == 'full':  users = full_import_cache.read_json_cache()
                     elif import_type == 'incremental': users = incremental_import_cache.read_json_cache()
                 except (TimeoutError, FileNotFoundError):
-                    logger.info('Error reading cache, either no longer valid or does not exist. Pulling from DB and saving new cache')
+                    logger.info('Error reading cache, either no longer valid or does not exist. Pulling from backend and saving new cache')
                     users = backend.list_users(filter=filter_string)
                     if import_type == 'full': full_import_cache.write_json_cache(obj_list_to_scim_json_list(users))
                     elif import_type == 'incremental': incremental_import_cache.write_json_cache(obj_list_to_scim_json_list(users))

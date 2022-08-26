@@ -16,6 +16,8 @@ logger.addHandler(stream_handler)
 
 full_import_cache = Cache('full_import_cache.json')
 incremental_import_cache = Cache('incremental_import_cache.json')
+full_import_groups_cache = Cache('full_import_groups_cache.json')
+incremental_import_groups_cache = Cache('incremental_import_groups_cache.json')
 
 SPCONFIG_JSON: dict = create_spconfig_json()
 
@@ -49,3 +51,7 @@ class ClearCache(Resource):
             return make_response('', 204)
         except Exception as e:
             return handle_server_side_error(e)
+
+class HealthCheck(Resource):
+    def get(self) -> Response:
+        return make_response('', 200)
