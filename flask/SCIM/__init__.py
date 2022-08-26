@@ -24,6 +24,7 @@ BACKEND_TYPE: str = config['General']['backend_type']
 # init this to False, read from config if the backend is a DB
 LOCAL_DATABASE = False
 APP_SCHEMA: str = config['Okta']['schema']
+USERNAME_FIELD: str = config['Okta']['username_field']
 
 app: Flask = Flask(__name__)
 app.logger.handlers.clear()

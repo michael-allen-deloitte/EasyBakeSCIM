@@ -1,12 +1,25 @@
 from datetime import datetime
+from typing import Tuple
+
+from SCIM import USERNAME_FIELD
 from SCIM.classes.generic.Filter import Filter, FilterValidationError
 from SCIM.classes.implementation.database.models import UsersDB
-from typing import Tuple
 
 class DBUsersFilter(Filter):
     def set_search_key_and_value(self, filter_args: Tuple[str]):
-        # id always needs to be mapped
-        if filter_args[0] == 'id':
+        # this always needs to be mapped, in this case the
+        # userName coming from Okta is mapped to the "email"
+        # column in the database. This can also be seen in 
+        # models.py.
+        if filter_args == USERNAME_FIELD:
+            self.search_value = filter_args[2]
+            try:
+                self.search_key = getattr(UsersDB, 'email')
+            except AttributeError as e:
+                raise FilterValidationError(message=str(e))
+        # id always needs to be mapped to the column that would be the
+        # "externalId" in the okta app profile
+        elif filter_args[0] == 'id':
             self.search_value = filter_args[2]
             try:
                 self.search_key = getattr(UsersDB, filter_args[0])
