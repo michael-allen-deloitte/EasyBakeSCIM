@@ -17,6 +17,12 @@ class CustomFilter(Filter):
             except AttributeError as e:
                 raise FilterValidationError(message=str(e))
             self.search_value = split_filter[2].lower().strip() == 'true'
+        elif split_filter[0] =='userName':
+            self.search_value = split_filter[2]
+            try:
+                self.search_key = getattr(UsersDB, 'email')
+            except AttributeError as e:
+                raise FilterValidationError(message=str(e))
         # if database has lastModified as date and not datetime
         #elif split_filter[0] == 'meta.lastModified':
         #    self.search_value = datetime.date(self.search_value)

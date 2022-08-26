@@ -105,10 +105,10 @@ class UsersSCIM(Resource):
             else:
                 totalResults = len(users)
 
+            count = SPCONFIG_JSON['filter']['maxResults']
             if 'count' in args: 
-                count = int(args.get('count'))
-            else:
-                count = SPCONFIG_JSON['filter']['maxResults']
+                if int(args.get('count')) <= count:
+                    count = int(args.get('count'))
             # if the total results are smaller than a page size
             if totalResults < count:
                 count = totalResults
