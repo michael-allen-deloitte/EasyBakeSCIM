@@ -7,7 +7,7 @@ from SCIM import SUPPORTED_PROVISIONING_FEATURES
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
 #from SCIM.classes.implementation.database.DBBackend import DBBackend as Backend
-from SCIM.classes.implementation.database.groups.DBGroupsBackend import GroupsBackend as Backend
+from SCIM.classes.implementation.database.groups.DBGroupsBackend import DBGroupsBackend as Backend
 from SCIM.classes.generic.SCIMGroup import SCIMGroup, obj_list_to_scim_json_list
 from SCIM.classes.generic.ListResponse import ListResponse
 from SCIM.endpoints.general import handle_server_side_error, handle_validation_error, full_import_groups_cache, incremental_import_groups_cache, SPCONFIG_JSON
@@ -52,6 +52,7 @@ class GroupsSCIM(Resource):
 
             if 'filter' in args:
                 filter_string = args['filter']
+                logger.debug('Filter string received: %s' % filter_string)
                 if 'meta.lastModified' in filter_string:
                     import_type = 'incremental'
                 else:

@@ -17,6 +17,7 @@ class SCIMUser(object):
         # for this object we are assuming only one phone number and that it is always has type 'mobile'
         self.mobilePhone = ""
         self.password = ""
+        self.groups: List[dict] = []
         # there are no custom attributes in this lab but we will leave this here as it does not impact anything else
         # and keeping it will make it easier to extend with a custom attribute in the future
         self.custom_attributes = {}
@@ -38,7 +39,7 @@ class SCIMUser(object):
                 for number in resource[key]:
                     if number['type'] == 'mobile':
                         self.mobilePhone = number['value']
-        for attribute in ['userName', 'active', 'password', 'id']:
+        for attribute in ['userName', 'active', 'password', 'id', 'groups']:
             if attribute in resource:
                 setattr(self, attribute, resource[attribute])
         for attribute in ['givenName', 'middleName', 'familyName']:
@@ -73,6 +74,7 @@ class SCIMUser(object):
         if 'mobilePhone' in keys: self.mobilePhone = resource['mobilePhone']
         if 'password' in keys: self.password = resource['password']
         if 'custom_attributes' in keys: self.custom_attributes = resource['custom_attributes']
+        if 'groups' in keys: self.groups = resource['groups']
         
 
 
@@ -130,6 +132,8 @@ class SCIMUser(object):
                 }
             ]
             rv['phoneNumbers'] = phone_numbers
+        if self.groups != []:
+            rv['groups'] = self.groups
         return rv
 
 def obj_list_to_scim_json_list(scim_user_obj_list: List[SCIMUser]) -> List[dict]:

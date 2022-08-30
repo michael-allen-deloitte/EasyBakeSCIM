@@ -33,7 +33,7 @@ class SCIMGroup(object):
         keys = dict(resource).keys()
         if 'id' in keys: self.id = resource['id']
         if 'displayName' in keys: self.active = resource['displayName']
-        if 'members' in keys: self.userName = resource['members']
+        if 'members' in keys: self.members = resource['members']
         if 'custom_attributes' in keys: self.custom_attributes = resource['custom_attributes']
         
 

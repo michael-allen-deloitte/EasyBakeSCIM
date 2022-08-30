@@ -1,8 +1,11 @@
 {
     "schemas": ["urn:scim:schemas:core:1.0", "urn:okta:custom:group:1.0"],
     "displayName": "AppGroup-04",
-    "id": "AppGroup-02",
-    "members" : [{"value": "101", "display": "okta"},{"value": "102", "display": "admin"}],
+    "id": "D183E676-1DB3-1F25-5217-53F172559548",
+    "members" : [
+        {"value": "D7AA9F31-DA6A-BEBD-8B22-C5F4579C4342", "display": "ultrices.iaculis@yahoo.net"},
+        {"value": "85DC48DE-2B30-34D7-F5B3-B86412DB2059", "display": "leo.cras@icloud.com"}
+    ],
     "urn:okta:custom:group:1.0":{
         "description":"This is the second group"
     }

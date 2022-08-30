@@ -29,9 +29,11 @@ class DBGroupsBackend(GroupsBackend):
     def list_groups(self, filter: str = None) -> List[SCIMGroup]:
         out: List[SCIMGroup] = []
         group_db_objs: List[GroupsDB] = []
+        logger.debug(filter)
 
         if filter is None:
             group_db_objs: List[GroupsDB] = GroupsDB.query.all()
+            logger.debug(group_db_objs)
         else:
             filter_obj = DBGroupsFilter(filter)
 
