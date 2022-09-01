@@ -10,28 +10,28 @@ test_helper = TestHelper('/Users', logger)
 
 class CreateUserTests(TestCase):
     def test_create_user(self):
-        response = test_helper.post_file_contents('./data/createNewUser.json')
+        response = test_helper.post_file_contents('../data/createNewUser.json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.json()['id'] != '')
         logger.info('The externalID of the returned user is %s' % response.json()['id'])
         logger.info('The user returned from the connector: %s' % response.json())
 
     def test_create_user_with_custom(self):
-        response = test_helper.post_file_contents('./data/createNewUser-withCustomExtension.json')
+        response = test_helper.post_file_contents('../data/createNewUser-withCustomExtension.json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.json()['id'] != '')
         logger.info('The externalID of the returned user is %s' % response.json()['id'])
         logger.info('The user returned from the connector: %s' % response.json())
     
     def test_create_pending(self):
-        response = test_helper.post_file_contents('./data/createPendingUser.json')
+        response = test_helper.post_file_contents('../data/createPendingUser.json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.json()['id'] != '')
         logger.info('The externalID of the returned user is %s' % response.json()['id'])
         logger.info('The user returned from the connector: %s' % response.json())
 
     def test_create_pending_with_custom(self):
-        response = test_helper.post_file_contents('./data/createPendingUser-withCustomExtension.json')
+        response = test_helper.post_file_contents('../data/createPendingUser-withCustomExtension.json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.json()['id'] != '')
         logger.info('The externalID of the returned user is %s' % response.json()['id'])
