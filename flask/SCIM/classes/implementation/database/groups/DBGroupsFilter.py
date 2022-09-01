@@ -1,7 +1,8 @@
+from typing import Tuple
 from datetime import datetime
+
 from SCIM.classes.generic.Filter import Filter, FilterValidationError
 from SCIM.classes.implementation.database.models import GroupsDB
-from typing import Tuple
 
 class DBGroupsFilter(Filter):
     def set_search_key_and_value(self, filter_args: Tuple[str]):

@@ -1,19 +1,16 @@
 import logging
-import uuid
+from uuid import uuid4
 from typing import List
 from datetime import datetime
 
-from SCIM import db, LOG_LEVEL, LOG_FORMAT
-from SCIM.classes.generic.UsersBackend import UserBackend
+from SCIM import db
+from SCIM.helpers import set_up_logger, LOG_LEVEL
 from SCIM.classes.generic.SCIMUser import SCIMUser
+from SCIM.classes.generic.UsersBackend import UserBackend
 from SCIM.classes.implementation.database.models import UsersDB, UsersGroupsAssociation
 from SCIM.classes.implementation.database.users.DBUsersFilter import DBUsersFilter
 
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 class DBUsersBackend(UserBackend):
     def get_user(self, user_id: str) -> SCIMUser:
@@ -60,7 +57,7 @@ class DBUsersBackend(UserBackend):
         # THIS MAY NEED TO CHANGE BASED ON IMPLEMENTATION DEPENDING ON 
         # HOW THE UNIQUE IDENTIFIER IS GENERATED 
         if scim_user.id == '':
-            id = str(uuid.uuid4())
+            id = str(uuid4())
         else:
             id = scim_user.id
 

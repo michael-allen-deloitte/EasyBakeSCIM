@@ -1,26 +1,10 @@
 from flask import Flask
 from flask_restful import Api
-import logging, configparser, os, sys
 from typing import List
 
-LOG_LEVEL = logging.DEBUG
-LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+from SCIM.helpers import config
 
-config = configparser.ConfigParser()
-# this value is relative to the run.py file
-config_path = './SCIM/config.ini'
-if os.path.exists(config_path):
-    config.read(config_path)
-else:
-    logger.error('Could not read config file from path %s' % config_path)
-    sys.exit(1)
-
-BACKEND_TYPE: str = config['General']['backend_type']
+BACKEND_TYPE: str = config['General']['backend_type'].lower()
 # init this to False, read from config if the backend is a DB
 LOCAL_DATABASE = False
 APP_SCHEMA: str = config['Okta']['schema']

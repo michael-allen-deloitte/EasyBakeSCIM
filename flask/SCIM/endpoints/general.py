@@ -1,18 +1,11 @@
-import logging
 from traceback import format_exc
 from flask import Response, jsonify, make_response
 from flask_restful import Resource
 
+from SCIM.helpers import scim_error, create_spconfig_json, set_up_logger
 from SCIM.classes.generic.Cache import Cache
-from SCIM.helpers import scim_error, create_spconfig_json
 
-LOG_LEVEL = logging.DEBUG
-LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 full_import_cache = Cache('full_import_cache.json')
 incremental_import_cache = Cache('incremental_import_cache.json')

@@ -1,67 +1,26 @@
 import requests
-import unittest
-import configparser
-import os, sys
-import json
-import logging
+from logging import DEBUG
+from unittest import TestCase, main
+from os.path import isfile
 
-LOG_LEVEL = logging.INFO
-LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+from SCIM.helpers import set_up_logger
+from SCIM.tests.common import BASE_URL, GET_ID, CACHE_DIR, LOCAL_DEPLOYMENT, TestHelper
 
+logger = set_up_logger(__name__, level=DEBUG)
 
-config = configparser.ConfigParser()
-config_path = './tests.ini'
-if os.path.exists(config_path):
-    config.read(config_path)
-else:
-    print('Could not read config file from path %s' % config_path)
-    sys.exit(1)
+ENDPOINT_URI = '/Users'
 
-BASE_URL: str = config['Deployment']['base_url']
-GET_ID: str = config['Deployment']['get_id']
-CACHE_DIR: str = config['Cache']['dir'].strip('/').strip('\\')
-LOCAL_DEPLOYMENT: bool = config['Deployment']['local'].lower() == 'true'
+test_helper = TestHelper(ENDPOINT_URI, logger)
 
-class ReadUsersTests(unittest.TestCase):
+class ReadUsersTests(TestCase):
     def setUp(self) -> None:
-        if LOCAL_DEPLOYMENT:
-            cache_dir = config['Cache']['dir']
-            if os.path.exists(cache_dir):
-                cache_files = os.listdir(cache_dir)
-                cache_files.remove('empty')
-                if len(cache_files) > 0:
-                    logger.info('Cleaning up any existing local cache')
-                    for file in cache_files:
-                        os.remove(os.path.join(cache_dir, file))
-        else:
-            logger.info('Clearing existing remote cache')
-            request_url = BASE_URL.strip('/') + '/ClearCache'
-            response = requests.get(request_url, verify=False)
-            self.assertEqual(response.status_code, 204)
+        self.assertTrue(test_helper.clear_cache())
     
     def tearDown(self) -> None:
-        if LOCAL_DEPLOYMENT:
-            cache_dir = config['Cache']['dir']
-            if os.path.exists(cache_dir):
-                cache_files = os.listdir(cache_dir)
-                cache_files.remove('empty')
-                if len(cache_files) > 0:
-                    logger.info('Cleaning up any existing local cache')
-                    for file in cache_files:
-                        os.remove(os.path.join(cache_dir, file))
-        else:
-            logger.info('Clearing existing remote cache')
-            request_url = BASE_URL.strip('/') + '/ClearCache'
-            response = requests.get(request_url, verify=False)
-            self.assertEqual(response.status_code, 204)
+        self.assertTrue(test_helper.clear_cache())
 
     def test_list_all_users(self):
-        request_url = BASE_URL.strip('/') + '/Users'
+        request_url = BASE_URL.strip('/') + ENDPOINT_URI
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
             logger.info('Response from Connector: %s' % str(response.json()))
@@ -84,8 +43,8 @@ class ReadUsersTests(unittest.TestCase):
             index += 1
             # cant check if these files exist when not running locally
             if LOCAL_DEPLOYMENT:
-                self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json'))
-                self.assertTrue(os.path.isfile(CACHE_DIR + '/full_import_cache.json.lock'))
+                self.assertTrue(isfile(CACHE_DIR + '/full_import_cache.json'))
+                self.assertTrue(isfile(CACHE_DIR + '/full_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?startIndex=%i&count=1&totalResults=%i' % (index, total_results)
             response = requests.get(request_url, verify=False)
             if response.status_code != 200:
@@ -94,7 +53,7 @@ class ReadUsersTests(unittest.TestCase):
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())
         self.assertEqual(len(users), total_results)
-        if LOCAL_DEPLOYMENT: self.assertFalse(os.path.isfile(CACHE_DIR + '/full_import_cache.json.lock'))
+        if LOCAL_DEPLOYMENT: self.assertFalse(isfile(CACHE_DIR + '/full_import_cache.json.lock'))
 
     def test_list_users_single_page(self):
         # do get all users with no params to get the total results
@@ -123,7 +82,7 @@ class ReadUsersTests(unittest.TestCase):
 
     def test_list_users_lt_filter(self):
         filter = '?filter=number lt 4'
-        request_url = BASE_URL.strip('/') + '/Users' + filter
+        request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
         if response.status_code != 200:
@@ -134,7 +93,7 @@ class ReadUsersTests(unittest.TestCase):
     
     def test_list_users_eq_filter(self):
         filter = '?filter=active eq true'
-        request_url = BASE_URL.strip('/') + '/Users' + filter
+        request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
             logger.info('Response from Connector: %s' % str(response.json()))
@@ -144,7 +103,7 @@ class ReadUsersTests(unittest.TestCase):
 
     def test_list_users_gt_filter(self):
         filter = '?filter=number gt 5'
-        request_url = BASE_URL.strip('/') + '/Users' + filter
+        request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
             logger.info('Response from Connector: %s' % str(response.json()))
@@ -154,7 +113,7 @@ class ReadUsersTests(unittest.TestCase):
 
     def test_incremental_import(self):
         test_filter = '?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"'
-        request_url = BASE_URL.strip('/') + '/Users' + test_filter
+        request_url = BASE_URL.strip('/') + ENDPOINT_URI + test_filter
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
             logger.info('Response from Connector: %s' % str(response.json()))
@@ -177,8 +136,8 @@ class ReadUsersTests(unittest.TestCase):
             index += 1
             # cant check if these files exist when not running locally
             if LOCAL_DEPLOYMENT:
-                self.assertTrue(os.path.isfile(CACHE_DIR + '/incremental_import_cache.json'))
-                self.assertTrue(os.path.isfile(CACHE_DIR + '/incremental_import_cache.json.lock'))
+                self.assertTrue(isfile(CACHE_DIR + '/incremental_import_cache.json'))
+                self.assertTrue(isfile(CACHE_DIR + '/incremental_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"&startIndex=%i&count=1&totalResults=%i' % (index, total_results)
             response = requests.get(request_url, verify=False)
             if response.status_code != 200:
@@ -187,7 +146,7 @@ class ReadUsersTests(unittest.TestCase):
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())
         self.assertEqual(len(users), total_results)
-        if LOCAL_DEPLOYMENT: self.assertFalse(os.path.isfile(CACHE_DIR + '/incremental_import_cache.json.lock'))
+        if LOCAL_DEPLOYMENT: self.assertFalse(isfile(CACHE_DIR + '/incremental_import_cache.json.lock'))
 
 if __name__ == '__main__':
-    unittest.main()
+    main()

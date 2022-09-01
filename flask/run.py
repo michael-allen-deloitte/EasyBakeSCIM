@@ -1,14 +1,11 @@
-import logging, sys, os
+import sys, os
 from pathlib import Path
 
-from SCIM import app, LOG_LEVEL, LOG_FORMAT, LOCAL_DATABASE, config
+from SCIM import app, LOCAL_DATABASE, config
+from SCIM.helpers import set_up_logger
 from SCIM.examples.populate_example_db import generate_example_database
 
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 if __name__ == '__main__':
     cmd_args = sys.argv

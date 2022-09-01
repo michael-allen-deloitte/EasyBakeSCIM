@@ -1,5 +1,5 @@
-from datetime import datetime
 from typing import Tuple
+from datetime import datetime
 
 from SCIM import USERNAME_FIELD
 from SCIM.classes.generic.Filter import Filter, FilterValidationError

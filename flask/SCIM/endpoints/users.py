@@ -1,9 +1,13 @@
-import logging
 from typing import List
 from flask import request, jsonify, make_response, Response
 from flask_restful import Resource
 
 from SCIM import SUPPORTED_PROVISIONING_FEATURES
+from SCIM.helpers import set_up_logger
+from SCIM.endpoints.general import handle_server_side_error, handle_validation_error, full_import_cache, incremental_import_cache, SPCONFIG_JSON
+from SCIM.classes.generic.Filter import FilterValidationError
+from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
+from SCIM.classes.generic.ListResponse import ListResponse
 # import our specific class as a generic Backend name, so that only the class being imported needs to be modified and the rest of the code runs the same
 # all specific implementations should be subclasses of the SCIM.classes.generic.Backend.UserBackend class
 from SCIM.classes.implementation.database.users.DBUsersBackend import DBUsersBackend as Backend
@@ -11,18 +15,8 @@ from SCIM.classes.implementation.database.users.DBUsersBackend import DBUsersBac
 # if using the generic Filter object still add the line like this:
 # from SCIM.classes.generic.Filter import Filter as FilterImplementation
 from SCIM.classes.implementation.database.users.DBUsersFilter import DBUsersFilter as FilterImplementation
-from SCIM.classes.generic.Filter import FilterValidationError
-from SCIM.classes.generic.SCIMUser import SCIMUser, obj_list_to_scim_json_list
-from SCIM.classes.generic.ListResponse import ListResponse
-from SCIM.endpoints.general import handle_server_side_error, handle_validation_error, full_import_cache, incremental_import_cache, SPCONFIG_JSON
 
-LOG_LEVEL = logging.DEBUG
-LOG_FORMAT = logging.Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 backend = Backend()
 

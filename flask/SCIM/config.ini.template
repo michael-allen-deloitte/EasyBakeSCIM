@@ -2,6 +2,9 @@
 # must be one of [database]
 # this will be extended for different backend types
 backend_type = database
+# must be one of [NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL] (https://docs.python.org/3/library/logging.html#logging-levels)
+# defaults to INFO if nothing is supplied or if value is entered incorrectly
+log_level = 
 
 [Okta]
 # this value is taken from the URL of the app this is connected to in okta

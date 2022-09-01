@@ -1,34 +1,78 @@
-import base64
-import logging
+import sys
+from os import path
+from base64 import b64decode
+from typing import List, Literal
+from configparser import ConfigParser
+from logging import StreamHandler, Logger, Handler, Formatter, getLogger, NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+from werkzeug.datastructures import Headers
 
-from SCIM import config, LOG_LEVEL, LOG_FORMAT
-
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
+# doing inital setup here not using the set_up_logger() function for code organization sake
+# the function needs LOG_LEVEL to be set, but a logger is needed for the config reading before
+# the LOG_LEVEL could be read from the config
+start_level = DEBUG
+LOG_FORMAT = Formatter('%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s')
+logger = getLogger(__name__)
+logger.setLevel(start_level)
+stream_handler = StreamHandler()
 stream_handler.setFormatter(LOG_FORMAT)
 logger.addHandler(stream_handler)
+
+config = ConfigParser()
+# this value is relative to the run.py file
+config_path = './SCIM/config.ini'
+if path.exists(config_path):
+    config.read(config_path)
+else:
+    logger.error('Could not read config file from path %s' % config_path)
+    sys.exit(1)
+
+log_level_string = config['General']['log_level']
+
+if log_level_string.lower() == 'notset':
+    LOG_LEVEL = NOTSET
+elif log_level_string.lower() == 'debug':
+    LOG_LEVEL = DEBUG
+elif log_level_string.lower() == 'info':
+    LOG_LEVEL = INFO
+elif log_level_string.lower() == 'warning':
+    LOG_LEVEL = WARNING
+elif log_level_string.lower() == 'error':
+    LOG_LEVEL = ERROR
+elif log_level_string.lower() == 'critical':
+    LOG_LEVEL = CRITICAL
+else:
+    LOG_LEVEL = INFO
 
 headerName = config['Auth']['headerName']
 headerValue = config['Auth']['headerValue']
 
+def set_up_logger(name: str, level=LOG_LEVEL, handlers: List[Handler] = [StreamHandler()]) -> Logger:
+    logger = getLogger(name)
+    logger.setLevel(level)
+    for handler in handlers:
+        handler.setFormatter(LOG_FORMAT)
+        logger.addHandler(handler)
+    return logger
 
-def authenticate(headers, type='Header') -> bool:
+def authenticate(headers: Headers, type: str='Header') -> bool:
     if type.lower() == 'header':
         try:
-            return headers[headerName] == headerValue
+            # using .get() instead of accessing as a dictionary
+            # key returns None if the key doesnt exist instead of
+            # throwing a KeyError
+            return headers.get(headerName) == headerValue
         except:
             return False
-    elif type.lower() == "basic":
-        unpw = str(base64.b64decode(headers['Authorization'].split(' ')[1]))
+    elif type.lower() == "basic" and headers.get('Authorization') is not None:
+        # usually Authorization header comes in the form: Authorization = Basic/Bearer <creds/token>
+        unpw = str(b64decode(headers.get('Authorization').split(' ')[1]))
         username = unpw.split(':')[0].replace("'", '')[1:]
         password = unpw.split(':')[1].replace("'", '')
         return username == headerName and password == headerValue
     else:
         raise ValueError("The authentication type: %s is not recognized" % type)
 
-
-def scim_error(message, status_code=500, stack_trace:str = None) -> dict:
+def scim_error(message: str, status_code: int=500, stack_trace:str = None) -> dict:
     rv = {
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
         "detail": message,
@@ -58,3 +102,19 @@ def create_spconfig_json() -> dict:
     spconfig_json['changePassword'] = {'supported': 'PUSH_PASSWORD_UPDATES' in supported_provisioning_features}
     spconfig_json['urn:okta:schemas:scim:providerconfig:1.0'] = {'userManagementCapabilities': supported_provisioning_features}
     return spconfig_json
+
+def parse_log_level_from_config(log_level_string: str) -> Literal:
+    if log_level_string.lower() == 'notset':
+        return NOTSET
+    elif log_level_string.lower() == 'debug':
+        return DEBUG
+    elif log_level_string.lower() == 'info':
+        return INFO
+    elif log_level_string.lower() == 'warning':
+        return WARNING
+    elif log_level_string.lower() == 'error':
+        return ERROR
+    elif log_level_string.lower() == 'critical':
+        return CRITICAL
+    else:
+        return INFO

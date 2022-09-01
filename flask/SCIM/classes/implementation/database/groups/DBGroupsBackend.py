@@ -3,17 +3,14 @@ import uuid
 from typing import List
 from datetime import datetime
 
-from SCIM import db, LOG_LEVEL, LOG_FORMAT
+from SCIM import db
+from SCIM.helpers import set_up_logger, LOG_LEVEL
 from SCIM.classes.generic.GroupsBackend import GroupsBackend
 from SCIM.classes.generic.SCIMGroup import SCIMGroup
-from SCIM.classes.implementation.database.models import GroupsDB, UsersDB, UsersGroupsAssociation
+from SCIM.classes.implementation.database.models import GroupsDB, UsersGroupsAssociation
 from SCIM.classes.implementation.database.groups.DBGroupsFilter import DBGroupsFilter
 
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 class DBGroupsBackend(GroupsBackend):
     def get_group(self, group_id: str) -> SCIMGroup:

@@ -5,13 +5,9 @@ import time
 import logging
 from typing import Union, List
 
-from SCIM import config, LOG_LEVEL, LOG_FORMAT
+from SCIM.helpers import set_up_logger, config
 
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(LOG_FORMAT)
-logger.addHandler(stream_handler)
+logger = set_up_logger(__name__)
 
 def creation_time(path_to_file: str) -> float:
     """
