@@ -19,7 +19,7 @@ class ReadUsersTests(TestCase):
     def tearDown(self) -> None:
         self.assertTrue(test_helper.clear_cache())
 
-    def test_list_all_users(self):
+    def test_list_all_users(self) -> None:
         request_url = BASE_URL.strip('/') + ENDPOINT_URI
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
@@ -28,7 +28,7 @@ class ReadUsersTests(TestCase):
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 22)
 
-    def test_pagination_cache(self):
+    def test_pagination_cache(self) -> None:
         users = []
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=1'
         response = requests.get(request_url, verify=False)
@@ -55,7 +55,7 @@ class ReadUsersTests(TestCase):
         self.assertEqual(len(users), total_results)
         if LOCAL_DEPLOYMENT: self.assertFalse(isfile(CACHE_DIR + '/full_import_cache.json.lock'))
 
-    def test_list_users_single_page(self):
+    def test_list_users_single_page(self) -> None:
         # do get all users with no params to get the total results
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=3'
         response = requests.get(request_url, verify=False)
@@ -73,14 +73,14 @@ class ReadUsersTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 2)
 
-    def test_get_single_user(self):
+    def test_get_single_user(self) -> None:
         request_url = BASE_URL.strip('/') + '/Users/' + GET_ID
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
             logger.info('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
 
-    def test_list_users_lt_filter(self):
+    def test_list_users_lt_filter(self) -> None:
         filter = '?filter=number lt 4'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
@@ -91,7 +91,7 @@ class ReadUsersTests(TestCase):
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 3)
     
-    def test_list_users_eq_filter(self):
+    def test_list_users_eq_filter(self) -> None:
         filter = '?filter=active eq true'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
@@ -101,7 +101,7 @@ class ReadUsersTests(TestCase):
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 12)
 
-    def test_list_users_gt_filter(self):
+    def test_list_users_gt_filter(self) -> None:
         filter = '?filter=number gt 5'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
@@ -111,7 +111,7 @@ class ReadUsersTests(TestCase):
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 17)
 
-    def test_incremental_import(self):
+    def test_incremental_import(self) -> None:
         test_filter = '?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + test_filter
         response = requests.get(request_url, verify=False)
@@ -121,7 +121,7 @@ class ReadUsersTests(TestCase):
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 17)
 
-    def test_incremental_pagination_cache(self):
+    def test_incremental_pagination_cache(self) -> None:
         users = []
         request_url = BASE_URL.strip('/') + '/Users?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"&startIndex=1&count=1'
         response = requests.get(request_url, verify=False)

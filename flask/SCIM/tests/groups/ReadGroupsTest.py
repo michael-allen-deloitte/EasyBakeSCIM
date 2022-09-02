@@ -18,7 +18,7 @@ class ReadGroupsTests(TestCase):
     def tearDown(self) -> None:
         self.assertTrue(test_helper.clear_cache())
 
-    def test_list_all_groups(self):
+    def test_list_all_groups(self) -> None:
         request_url = BASE_URL.strip('/') + ENDPOINT_URI
         response = requests.get(request_url, verify=False)
         if response.status_code != 200:
