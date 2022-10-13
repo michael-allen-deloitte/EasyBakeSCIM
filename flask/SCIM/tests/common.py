@@ -14,7 +14,7 @@ else:
     print('Could not read config file from path %s' % config_path)
     exit(1)
 
-BASE_URL: str = config['Deployment']['base_url']
+BASE_URL: str = config['Deployment']['base_url'].strip('/')
 GET_ID: str = config['Deployment']['get_id']
 CACHE_DIR: str = config['Cache']['dir'].strip('/').strip('\\')
 LOCAL_DEPLOYMENT: bool = config['Deployment']['local'].lower() == 'true'
@@ -35,7 +35,7 @@ class TestHelper:
                         remove(path.join(CACHE_DIR, file))
         else:
             self.logger.info('Clearing existing remote cache')
-            request_url = BASE_URL.strip('/') + '/ClearCache'
+            request_url = BASE_URL + '/ClearCache'
             response = get(request_url, verify=False)
             return response.status_code == 204
         return True
@@ -43,13 +43,13 @@ class TestHelper:
     def post_file_contents(self, file_path: str) -> Response:
         with open(file_path, 'r') as data_file:
             test_data = load(data_file)
-        request_url = urljoin(BASE_URL.strip('/'), self.endpoint_uri.strip('/'))
+        request_url = urljoin(BASE_URL, self.endpoint_uri.strip('/'))
         self.logger.info('Making POST to %s' % request_url)
         return post(request_url, json=test_data, verify=False)
 
     def put_file_contents(self, file_path: str, resource_key: str = 'id') -> Response:
         with open(file_path, 'r') as data_file:
             test_data = load(data_file)
-        request_url = urljoin(BASE_URL.strip('/'), self.endpoint_uri.strip('/'), test_data[resource_key])
+        request_url = urljoin(BASE_URL, self.endpoint_uri.strip('/'), test_data[resource_key])
         self.logger.info('Making PUT to %s' % request_url)
         return put(request_url, json=test_data, verify=False)

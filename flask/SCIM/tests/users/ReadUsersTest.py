@@ -22,8 +22,7 @@ class ReadUsersTests(TestCase):
     def test_list_all_users(self) -> None:
         request_url = BASE_URL.strip('/') + ENDPOINT_URI
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 22)
@@ -32,8 +31,7 @@ class ReadUsersTests(TestCase):
         users = []
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=1'
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 1)
         users.append(response.json())
@@ -47,8 +45,7 @@ class ReadUsersTests(TestCase):
                 self.assertTrue(isfile(CACHE_DIR + '/full_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?startIndex=%i&count=1&totalResults=%i' % (index, total_results)
             response = requests.get(request_url, verify=False)
-            if response.status_code != 200:
-                logger.info('Response from Connector: %s' % str(response.json()))
+            if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())
@@ -59,8 +56,7 @@ class ReadUsersTests(TestCase):
         # do get all users with no params to get the total results
         request_url = BASE_URL.strip('/') + '/Users?startIndex=1&count=3'
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 3)
         total_results = response.json()['totalResults']
@@ -68,16 +64,14 @@ class ReadUsersTests(TestCase):
         request_url = BASE_URL.strip('/') + '/Users?startIndex=4&count=2&totalResults=%i' % total_results
         response = requests.get(request_url, verify=False)
         logger.info('Second page response: %s' % response.json())
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 2)
 
     def test_get_single_user(self) -> None:
         request_url = BASE_URL.strip('/') + '/Users/' + GET_ID
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
 
     def test_list_users_lt_filter(self) -> None:
@@ -85,8 +79,7 @@ class ReadUsersTests(TestCase):
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
         self.assertEqual(response.status_code, 200)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         # Expecting 3 returned users
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 3)
@@ -95,8 +88,7 @@ class ReadUsersTests(TestCase):
         filter = '?filter=active eq true'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 12)
@@ -105,8 +97,7 @@ class ReadUsersTests(TestCase):
         filter = '?filter=number gt 5'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + filter
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 17)
@@ -115,8 +106,7 @@ class ReadUsersTests(TestCase):
         test_filter = '?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"'
         request_url = BASE_URL.strip('/') + ENDPOINT_URI + test_filter
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('%i Users returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 17)
@@ -125,8 +115,7 @@ class ReadUsersTests(TestCase):
         users = []
         request_url = BASE_URL.strip('/') + '/Users?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"&startIndex=1&count=1'
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['Resources']), 1)
         users.append(response.json())
@@ -140,8 +129,7 @@ class ReadUsersTests(TestCase):
                 self.assertTrue(isfile(CACHE_DIR + '/incremental_import_cache.json.lock'))
             request_url = BASE_URL.strip('/') + '/Users?filter=meta.lastModified gt \"2021-05-07T14:19:34Z\"&startIndex=%i&count=1&totalResults=%i' % (index, total_results)
             response = requests.get(request_url, verify=False)
-            if response.status_code != 200:
-                logger.info('Response from Connector: %s' % str(response.json()))
+            if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.json()['Resources']), 1)
             users.append(response.json())

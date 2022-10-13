@@ -13,31 +13,41 @@ logger.info("These tests use the sample data in SCIM/examples/users.csv and expe
 class UpdateUserTests(TestCase):
     def test_activate_user(self) -> None:
         response = test_helper.put_file_contents('../data/activateUser.json')
+        if response.status_code != 200:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
+        if not response.json()['active']:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertTrue(response.json()['active'])
         logger.info('User status returned as active')
-        logger.info('The user returned from the connector: %s' % response.json())
 
     def test_profile_update(self) -> None:
         response = test_helper.put_file_contents('../data/pushProfileUpdate.json')
+        if response.status_code != 200:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
+        if response.json()['name']['givenName'] != 'Dana1' or response.json()['name']['familyName'] != 'Ruiz1':
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.json()['name']['givenName'], 'Dana1')
         self.assertEqual(response.json()['name']['familyName'], 'Ruiz1')
         logger.info('User attributes updated successfully')
-        logger.info('The user returned from the connector: %s' % response.json())
 
     def test_password_update(self) -> None:
         response = test_helper.put_file_contents('../data/pushPasswordUpdate.json')
+        if response.status_code != 200:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('User password updated successfully')
-        logger.info('The user returned from the connector: %s' % response.json())
 
     def test_deactivate_user(self) -> None:
         response = test_helper.put_file_contents('../data/deactivateUser.json')
+        if response.status_code != 200:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
+        if response.json()['active']:
+            logger.error('Response from Connector: %s' % str(response.json()))
         self.assertFalse(response.json()['active'])
         logger.info('User status returned as deactivated')
-        logger.info('The user returned from the connector: %s' % response.json())
 
 def suite() -> TestSuite:
     suite = TestSuite()

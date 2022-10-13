@@ -21,8 +21,7 @@ class ReadGroupsTests(TestCase):
     def test_list_all_groups(self) -> None:
         request_url = BASE_URL.strip('/') + ENDPOINT_URI
         response = requests.get(request_url, verify=False)
-        if response.status_code != 200:
-            logger.info('Response from Connector: %s' % str(response.json()))
+        if response.status_code != 200: logger.error('Response from Connector: %s' % str(response.json()))
         self.assertEqual(response.status_code, 200)
         logger.info('%i Groups returned from Connector' % len(response.json()['Resources']))
         self.assertEqual(len(response.json()['Resources']), 5)
