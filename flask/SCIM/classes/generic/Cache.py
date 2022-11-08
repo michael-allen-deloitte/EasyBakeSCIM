@@ -114,7 +114,7 @@ class Cache:
             stat = os.stat(self.cache_file_path + '.lock')
             # if the lock file has timed out, force a cleanup and return False
             if time.time() > stat.st_mtime + self.lock_lifetime_sec: 
-                logger.info('Cache lock has not been modified in %f minutes, forcing cleanup' % time.time() - stat.st_mtime)
+                logger.info('Cache lock has not been modified in %f minutes, forcing cleanup' % (time.time() - stat.st_mtime))
                 self.cleanup_lock_file(force=True)
                 return False
             # if it exists and nothing has timed out then return True
