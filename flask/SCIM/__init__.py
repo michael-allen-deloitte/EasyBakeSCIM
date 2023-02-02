@@ -31,7 +31,7 @@ for feature in possible_provisioning_features:
     if config['SCIM Features'][feature].lower() == 'true': SUPPORTED_PROVISIONING_FEATURES.append(feature.upper())
 
 users_features = [
-    'PUSH_NEW_USER',
+    'PUSH_NEW_USERS',
     'PUSH_PENDING_USERS',
     'IMPORT_NEW_USERS',
     'OPP_SCIM_INCREMENTAL_IMPORTS'
