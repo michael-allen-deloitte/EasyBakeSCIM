@@ -1,15 +1,15 @@
 {
     "schemas": ["urn:scim:schemas:core:1.0"],
-    "userName": "myemail@domain.com",
+    "userName": "myemail123@domain.com",
     "emails": [
         {
             "primary": true,
-            "value": "myemail@domain.com",
+            "value": "myemail123@domain.com",
             "type": "primary"
         },
         {
             "primary": false,
-            "value": "mypersonalemail@domain.com",
+            "value": "mypersonalemail123@domain.com",
             "type": "secondary"
         }
     ],
@@ -20,15 +20,15 @@
         }
     ],
     "name": {
-        "familyName": "LastName",
-        "givenName": "FirstName"
+        "familyName": "LastName123",
+        "givenName": "FirstName123"
     },
     "active": true,
     "password": "verySecure",
     "groups": [
         {
-            "display": "firstGroup",
-            "value": "1001"
+            "display": "Sales",
+            "value": "312EB3D5-C1CE-F499-51D1-4EF1B417CA80"
         }
     ]
 }

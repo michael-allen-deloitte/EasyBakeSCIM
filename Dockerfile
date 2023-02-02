@@ -18,6 +18,7 @@ RUN apt-get -y install nginx \
     && apt-get -y install build-essential \
     && apt-get install -y dos2unix
 
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r ./requirements.txt
 
 COPY ./nginx/nginx.conf /etc/nginx

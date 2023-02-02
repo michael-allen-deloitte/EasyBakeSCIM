@@ -2,11 +2,19 @@
 # must be one of [database]
 # this will be extended for different backend types
 backend_type = database
+# must be one of [NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL] (https://docs.python.org/3/library/logging.html#logging-levels)
+# defaults to INFO if nothing is supplied or if value is entered incorrectly
+log_level = 
 
 [Okta]
 # this value is taken from the URL of the app this is connected to in okta
 # use onprem_app for local db and test cases
 schema = 
+# this is the value you set for the "Unique user field name" setting
+# in the app wizard when configuring Provisioning
+# this needs to be mapped in the implementation filter to the proper
+# key in the backend
+username_field = 
 
 [Database]
 # local determines if the connector will attempt to connect to the database with info from below, 
