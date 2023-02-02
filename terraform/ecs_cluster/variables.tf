@@ -3,6 +3,12 @@ variable app_name {
   description = "Name used to identify the app in labels and names"
 }
 
+variable aws_region {
+  type        = string
+  default     = "us-east-1"
+  description = "Region of AWS to deploy to"
+}
+
 variable cluster_name {
   type        = string
   description = "Name of the ECS Cluster"

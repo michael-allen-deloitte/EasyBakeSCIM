@@ -8,6 +8,7 @@ resource "aws_alb" "application_load_balancer" {
 
 # Creating a security group for the load balancer:
 resource "aws_security_group" "load_balancer_security_group" {
+  name = "${var.app_name}-lb-security-group"
   ingress {
     from_port   = var.lb_listen_port
     to_port     = var.app_listen_port
@@ -32,6 +33,7 @@ resource "aws_lb_target_group" "target_group" {
   health_check {
     matcher = "200,301,302"
     path = "/"
+    protocol    = var.target_group_protocol
   }
 }
 

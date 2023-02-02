@@ -24,6 +24,7 @@ module load_balancer {
 
 module ecs_cluster {
   source = "./ecs_cluster"
+  aws_region = local.aws_region
   app_name  = local.app_name
   cluster_name = "${local.app_name}-cluster"
   ecr_repo_url = local.ecr_repo_url

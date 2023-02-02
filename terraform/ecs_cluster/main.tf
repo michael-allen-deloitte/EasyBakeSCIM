@@ -21,7 +21,17 @@ resource "aws_ecs_task_definition" "ecs_task_def" {
         }
       ],
       "memory": ${var.container_memory},
-      "cpu": ${var.container_cpu} 
+      "cpu": ${var.container_cpu},
+      "logConfiguration": 
+      {
+        "logDriver": "awslogs",
+        "options": 
+        {
+          "awslogs-group": "/ecs/${var.app_name}-task",
+          "awslogs-region": "${var.aws_region}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      } 
     }
   ]
   DEFINITION
@@ -43,6 +53,24 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
 }
 
 # service creation
+resource "aws_security_group" "service_security_group" {
+  name = "${var.app_name}-service-security-group"
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    # Only allowing traffic in from the load balancer security group
+    security_groups = [var.lb_security_group_id]
+  }
+
+  egress {
+    from_port   = 0 # Allowing any incoming port
+    to_port     = 0 # Allowing any outgoing port
+    protocol    = "-1" # Allowing any outgoing protocol 
+    cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
+  }
+}
+
 resource "aws_ecs_service" "ecs_service" {
   name            = "${var.app_name}-service"                     # Naming our first service
   cluster         = "${aws_ecs_cluster.my_cluster.id}"            # Referencing our created Cluster
@@ -59,22 +87,6 @@ resource "aws_ecs_service" "ecs_service" {
   network_configuration {
     subnets          = var.subnet_ids
     assign_public_ip = true # Providing our containers with public IPs
-  }
-}
-
-resource "aws_security_group" "service_security_group" {
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    # Only allowing traffic in from the load balancer security group
-    security_groups = [var.lb_security_group_id]
-  }
-
-  egress {
-    from_port   = 0 # Allowing any incoming port
-    to_port     = 0 # Allowing any outgoing port
-    protocol    = "-1" # Allowing any outgoing protocol 
-    cidr_blocks = ["0.0.0.0/0"] # Allowing traffic out to all IP addresses
+    security_groups  = ["${aws_security_group.service_security_group.id}"] # Setting the security group
   }
 }
